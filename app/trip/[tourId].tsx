@@ -1,0 +1,18 @@
+import { Pressable, StyleSheet, Text, View } from "react-native";
+import { router, useLocalSearchParams } from "expo-router";
+import { useQuery } from "@tanstack/react-query";
+import { customerApi } from "@/src/api/services";
+import { Accordion } from "@/src/components/Section";
+import { Screen } from "@/src/components/Screen";
+import { ErrorView, LoadingView } from "@/src/components/StateViews";
+import { radius, spacing, useAppTheme } from "@/src/theme/theme";
+import { inr, readableDate } from "@/src/utils/format";
+
+export default function TripDetailScreen() {
+  const theme = useAppTheme(); const { tourId } = useLocalSearchParams<{ tourId: string }>(); const trip = useQuery({ queryKey: ["tour", tourId], queryFn: () => customerApi.tour(tourId), enabled: Boolean(tourId) });
+  if (trip.isLoading) return <Screen><LoadingView label="Loading trip details…" /></Screen>;
+  if (trip.isError || !trip.data) return <Screen><ErrorView retry={() => trip.refetch()} message="This trip is unavailable or no longer belongs to your account." /></Screen>;
+  const item = trip.data;
+  return <Screen><View style={[styles.summary, { backgroundColor: theme.colors.card, borderColor: theme.colors.border }]}><Text style={[styles.title, { color: theme.colors.text }]}>{item.packageName || "Starry Nights journey"}</Text><Text style={[styles.status, { color: theme.colors.accent }]}>{item.status || "Confirmed"}</Text><Text style={{ color: theme.colors.muted }}>{readableDate(item.pickupDate)} to {readableDate(item.dropDate)}</Text>{item.pickupLocation ? <Text style={{ color: theme.colors.muted }}>Pickup: {item.pickupLocation}</Text> : null}{item.dropLocation ? <Text style={{ color: theme.colors.muted }}>Drop: {item.dropLocation}</Text> : null}</View><Accordion title="Travellers" initiallyOpen><Text style={{ color: theme.colors.muted }}>{item.adults ?? 0} adults · {item.kids ?? 0} children</Text></Accordion>{item.accommodation?.length ? <Accordion title="Accommodation" initiallyOpen>{item.accommodation.map((stay, index) => <View key={`${stay.city}-${index}`} style={styles.stay}><Text style={[styles.stayTitle, { color: theme.colors.text }]}>{stay.hotel || stay.city || "Accommodation"}</Text><Text style={{ color: theme.colors.muted }}>{[stay.city, stay.checkin && `Check-in ${readableDate(stay.checkin)}`, stay.checkout && `Check-out ${readableDate(stay.checkout)}`, stay.room, stay.meal].filter(Boolean).join(" · ")}</Text>{stay.contact ? <Text style={{ color: theme.colors.muted }}>Contact: {stay.contact}</Text> : null}</View>)}</Accordion> : null}<View style={[styles.payment, { backgroundColor: theme.colors.soft }]}><Text style={[styles.paymentTitle, { color: theme.colors.text }]}>Payment summary</Text><Text style={{ color: theme.colors.muted }}>Total: {inr(item.totalCost)} · {item.paymentStatus || "Status pending"}</Text><Pressable onPress={() => router.push({ pathname: "/invoice/[tourId]", params: { tourId: item.tourId } })} style={[styles.button, { backgroundColor: theme.colors.accent }]}><Text style={styles.buttonText}>View invoice</Text></Pressable></View></Screen>;
+}
+const styles = StyleSheet.create({ summary: { borderWidth: 1, borderRadius: radius.lg, padding: spacing.lg, gap: spacing.xs }, title: { fontSize: 24, fontWeight: "800" }, status: { fontWeight: "800" }, stay: { gap: 4, paddingVertical: spacing.sm, borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: "#CBD5E1" }, stayTitle: { fontWeight: "800", fontSize: 16 }, payment: { borderRadius: radius.lg, padding: spacing.lg, gap: spacing.sm }, paymentTitle: { fontSize: 18, fontWeight: "800" }, button: { alignSelf: "flex-start", borderRadius: radius.pill, paddingVertical: 11, paddingHorizontal: spacing.lg }, buttonText: { color: "#fff", fontWeight: "800" } });

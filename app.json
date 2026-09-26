@@ -1,0 +1,50 @@
+{
+  "expo": {
+    "name": "Starry Nights",
+    "slug": "starry-nights-mobile",
+    "version": "1.0.0",
+    "icon": "./assets/starry-nights-holidays.png",
+    "orientation": "portrait",
+    "scheme": "starrynights",
+    "userInterfaceStyle": "automatic",
+    "newArchEnabled": true,
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.starrynightsindia.app",
+      "buildNumber": "1"
+    },
+    "android": {
+      "package": "com.starrynightsindia.app",
+      "versionCode": 1,
+      "blockedPermissions": [
+        "android.permission.RECORD_AUDIO"
+      ],
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/starry-nights-holidays.png",
+        "backgroundColor": "#E50914"
+      },
+      "edgeToEdgeEnabled": true,
+      "predictiveBackGestureEnabled": false
+    },
+    "plugins": [
+      "expo-router",
+      "expo-secure-store",
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Allow Starry Nights to select travel photos."
+        }
+      ]
+    ],
+    "experiments": {
+      "typedRoutes": true
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "bb8c3025-ba56-4234-af08-50b8f72eee44"
+      }
+    },
+    "owner": "starrynightss-team"
+  }
+}
