@@ -59,10 +59,9 @@ assertions only. It is not present in mobile application code.
 
 ## Blocking external steps
 
-1. Sign in to the approved EAS account, run `eas init` to replace the app's
-   placeholder EAS project ID, then set
-   `EXPO_PUBLIC_API_BASE_URL=https://node-api-starrynightsindia-in.vercel.app/api`
-   in EAS `preview`.
+1. Wait for the internally distributed Android Preview APK submitted to EAS on
+   2026-09-26, install it on a physical device, and complete the device
+   checklist in `MOBILE_STAGING_SETUP.md`.
 2. Create Android and iOS Google OAuth client IDs and add them to both EAS and
    Node `GOOGLE_ALLOWED_CLIENT_IDS`; then verify real Google login separately.
 3. Configure EAS Android signing and complete the Android physical-device
@@ -70,7 +69,7 @@ assertions only. It is not present in mobile application code.
 
 ## Decision
 
-**Safe for physical staging testing: NO** until the approved EAS account links
-the project, assigns the verified staging API to the `preview` environment,
-and produces the first internal Android APK. The application is otherwise
-staging-test ready without any production database connection.
+**Safe for physical staging testing: PENDING BUILD COMPLETION.** The approved
+EAS account now links the project and has the verified staging API in the
+`preview` environment. Install only the completed internal APK; the application
+has no production database connection.

@@ -108,8 +108,10 @@ Status labels: **IMPLEMENTED** means code is connected to the existing contract;
 - [x] Staging target smoke — LIVE STAGING API VERIFIED on 2026-09-26:
   health, public content, package/category detail, gallery, notifications and
   safe enquiry/chatbot validation passed against the Vercel staging API.
-- [ ] Physical-device staging test — requires approved EAS project linking,
-  preview environment/signing, Android/iOS OAuth IDs, and device/emulator access.
+- [ ] Physical-device staging test — Android Preview APK is submitted through
+  the linked EAS project; completion, Android installation and device/emulator
+  access are still required. Android/iOS OAuth IDs remain required for native
+  Google-login verification only.
 
 See `MOBILE_STAGING_SETUP.md` and `PRE_TESTING_READINESS.md` for the exact
 safe setup and remaining gates.

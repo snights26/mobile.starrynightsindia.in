@@ -9,7 +9,7 @@ secret.
 
 | Variable | Classification / default | Development | Staging | Production | Purpose | Current status / test |
 | --- | --- | --- | --- | --- | --- | --- |
-| `EXPO_PUBLIC_API_BASE_URL` | **PUBLIC SAFE, REQUIRED BUILD-TIME**; empty source fallback | local API ending `/api` | `https://node-api-starrynightsindia-in.vercel.app/api` | production Node API ending `/api` | Axios API base. App reports a clear configuration error when missing. | staging template is configured; EAS preview environment still requires this same value. |
+| `EXPO_PUBLIC_API_BASE_URL` | **PUBLIC SAFE, REQUIRED BUILD-TIME**; empty source fallback | local API ending `/api` | `https://node-api-starrynightsindia-in.vercel.app/api` | production Node API ending `/api` | Axios API base. App reports a clear configuration error when missing. | staging template and EAS `preview` environment are configured and verified. |
 | `EXPO_PUBLIC_WEB_BASE_URL` | **PUBLIC SAFE, OPTIONAL BUILD-TIME**; empty | local public web URL if testing policy links/share URLs | staging public URL | production public URL | Resolves website policy/package links; absent disables those links safely. | example placeholder only. |
 | `EXPO_PUBLIC_GOOGLE_AUTH_ENABLED` | **PUBLIC SAFE, OPTIONAL BUILD-TIME**; `false` unless literal `true` | false until local OAuth is registered | true only with staging clients | true only with production clients | Gates native Google sign-in UI. | example false; live sign-in pending. |
 | `EXPO_PUBLIC_GOOGLE_EXPO_CLIENT_ID` | **PUBLIC SAFE, OPTIONAL** | Expo Go client if that flow is deliberately tested | normally omit for EAS standalone app | normally omit for EAS standalone app | Expo Go OAuth audience only. | unset; not required for internal/production standalone builds. |
@@ -35,7 +35,7 @@ webhook secret, SMTP password, or Cloudinary API secret in `EXPO_PUBLIC_*`,
 | Image picker | `expo-image-picker` plugin and iOS photo permission text are set. Android uses the platform photo picker; live permission behavior remains device testing. |
 | SecureStore | `expo-secure-store` plugin is set; session code uses `WHEN_UNLOCKED_THIS_DEVICE_ONLY`. |
 | Router/deep links | Expo Router plus `starrynights` scheme configured; no custom provider redirect credentials are fabricated. Device verification remains required. |
-| EAS project ID | **PLACEHOLDER:** `REPLACE_WITH_EAS_PROJECT_ID`. Run `eas init` under the approved Expo account and replace it; do not invent an ID. |
+| EAS project ID | Linked to `@starrynightss-team/starry-nights-mobile` with public project ID `bb8c3025-ba56-4234-af08-50b8f72eee44`. |
 | `eas.json` | Development/preview internal distribution and production auto-increment profiles exist. Credentials/signing values are intentionally absent and must be held by EAS/Apple/Google, not source. |
 
 ## Expo SDK decision

@@ -91,13 +91,13 @@ only for an isolated local/LAN Node API during development.
 
 ## Preview build and physical-device checklist
 
-1. In the EAS `preview` environment, set the public staging values above.
+1. The project is linked to `@starrynightss-team/starry-nights-mobile`. The
+   EAS `preview` environment contains the public staging API value above.
    The preview profile creates an internally distributed Android APK; it does
    not submit to Google Play. Keep Google disabled until Android/iOS client
    IDs are registered.
-2. Link the project through `eas init`, then run
-   `eas build --profile preview --platform android`. Do not use the production
-   profile for this test.
+2. Run `eas build --profile preview --platform android` for subsequent Android
+   preview builds. Do not use the production profile for this test.
 
 ### Anonymous/public
 
@@ -125,5 +125,5 @@ only for an isolated local/LAN Node API during development.
 
 - Android Google OAuth client ID and signing-certificate registration.
 - iOS Google OAuth client ID, Apple Developer signing, and TestFlight setup.
-- Approved EAS project ID and per-environment EAS variables/signing.
+- EAS managed Android signing and the completed internal Preview APK.
 - Physical Android device/emulator and iOS device/simulator for UX verification.
