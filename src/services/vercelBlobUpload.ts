@@ -2,44 +2,14 @@ import type { DirectUploadAuthorization } from "@/src/types/api";
 import { requireApiBaseUrl } from "@/src/constants/config";
 import { authenticatedFetch } from "@/src/api/client";
 
-type PresignedPayload = {
-  delegationToken: string;
-  signature: string;
-  params: Record<string, string>;
-};
-
 type PresignResponse = {
-  type: "blob.generate-presigned-url";
-  presignedUrlPayload: PresignedPayload;
+  uploadUrl: string;
+  pathname: string;
+  contentType: string;
+  headers: Record<string, string>;
 };
 
 export type DirectBlobUploadResult = { url: string; pathname: string };
-
-const blobApiUrl = "https://vercel.com/api/blob";
-
-function storeIdFromDelegationToken(token: string) {
-  const encodedPayload = token.split(".")[0];
-  if (!encodedPayload) throw new Error("The upload authorization is invalid. Please try again.");
-  const base64 = encodedPayload.replace(/-/g, "+").replace(/_/g, "/");
-  const padded = base64.padEnd(Math.ceil(base64.length / 4) * 4, "=");
-  try {
-    const decoded = globalThis.atob(padded);
-    const payload = JSON.parse(decoded) as { storeId?: unknown };
-    if (typeof payload.storeId !== "string" || !payload.storeId.trim()) throw new Error("missing store ID");
-    return payload.storeId.replace(/^store_/, "");
-  } catch {
-    throw new Error("The upload authorization is invalid. Please try again.");
-  }
-}
-
-function makePresignedPutUrl(pathname: string, payload: PresignedPayload) {
-  const url = new URL(`${blobApiUrl}/`);
-  url.searchParams.set("pathname", pathname);
-  for (const [key, value] of Object.entries(payload.params)) url.searchParams.set(key, value);
-  url.searchParams.set("vercel-blob-delegation", payload.delegationToken);
-  url.searchParams.set("vercel-blob-signature", payload.signature);
-  return url.toString();
-}
 
 function assertUploadResult(value: unknown, pathname: string): DirectBlobUploadResult {
   if (!value || typeof value !== "object") throw new Error("The upload service returned an invalid response.");
@@ -63,34 +33,27 @@ export async function uploadToAuthorizedBlob(input: {
   const authorizationResponse = await authenticatedFetch(`${requireApiBaseUrl()}/storage/uploads/presign`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      type: "blob.generate-presigned-url",
-      payload: {
-        pathname: input.authorization.pathname,
-        clientPayload: input.authorization.intent,
-        // Expo's native fetch uploads the selected File as one direct Blob PUT.
-        // This stays outside the Vercel Function's 4.5 MB body limit.
-        multipart: false,
-      },
-    }),
+    body: JSON.stringify({ intent: input.authorization.intent }),
   });
   if (!authorizationResponse.ok) throw new Error("Could not prepare this upload. Please try again.");
 
   let presign: PresignResponse;
   try { presign = await authorizationResponse.json() as PresignResponse; } catch { throw new Error("Could not prepare this upload. Please try again."); }
-  if (presign.type !== "blob.generate-presigned-url" || !presign.presignedUrlPayload) {
+  if (
+    typeof presign.uploadUrl !== "string" ||
+    typeof presign.pathname !== "string" ||
+    presign.pathname !== input.authorization.pathname ||
+    typeof presign.contentType !== "string" ||
+    presign.contentType !== input.contentType ||
+    !presign.headers ||
+    typeof presign.headers !== "object"
+  ) {
     throw new Error("Could not prepare this upload. Please try again.");
   }
 
-  const storeId = storeIdFromDelegationToken(presign.presignedUrlPayload.delegationToken);
-  const uploadResponse = await fetch(makePresignedPutUrl(input.authorization.pathname, presign.presignedUrlPayload), {
+  const uploadResponse = await fetch(presign.uploadUrl, {
     method: "PUT",
-    headers: {
-      "x-api-version": "12",
-      "x-vercel-blob-store-id": storeId,
-      "x-vercel-blob-access": input.authorization.access,
-      "x-content-type": input.contentType,
-    },
+    headers: presign.headers,
     body: input.body,
   });
   if (!uploadResponse.ok) throw new Error("Photo upload failed. Check your connection and try again.");

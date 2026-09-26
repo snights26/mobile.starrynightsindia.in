@@ -42,7 +42,7 @@ The ignored local environment used `https://api.starrynightsindia.in/api` and th
 | GET | `/notifications/me` | Account updates | USER | public + targeted notification array | IMPLEMENTED |
 | GET | `/get-photos` | My travel photos | USER | user's gallery-image array | IMPLEMENTED |
 | POST | `/upload-photo/authorize` | Travel-photo authorization | USER | filename, MIME type, declared size / scoped intent | IMPLEMENTED |
-| POST | `/storage/uploads/presign` | Direct Blob control exchange | USER + matching scoped intent | Vercel presign protocol / short-lived scoped PUT authorization | IMPLEMENTED |
+| POST | `/storage/uploads/presign` | Direct Blob control exchange | USER + matching scoped intent | opaque intent / server-issued `uploadUrl`, constrained headers, pathname, content type | IMPLEMENTED |
 | POST | `/upload-photo/finalize` | Travel-photo finalization | USER + matching scoped intent | Blob URL + intent / gallery image | IMPLEMENTED |
 | POST | `/upload-photo` | Legacy small travel photo upload | USER | multipart `file`, up to 4 MB / gallery image | API compatibility retained; mobile uses the direct flow |
 | DELETE | `/delete-photo/:imageId` | My travel photos | USER/owner | message | IMPLEMENTED |
