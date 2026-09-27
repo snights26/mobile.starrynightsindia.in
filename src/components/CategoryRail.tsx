@@ -12,7 +12,7 @@ export function CategoryRail({ categories, title = "Browse by destination", limi
   const rootCategories = categories.filter((item) => !item.isSubcategory && !item.isSub).slice(0, limit);
   if (!rootCategories.length) return null;
 
-  return <Section title={title} action={<Pressable onPress={() => router.push("/(tabs)/explore")} accessibilityRole="button"><Text style={{ color: theme.colors.accent, fontWeight: "700" }}>See all</Text></Pressable>}>
+  return <Section title={title} action={<Pressable onPress={() => router.push("/categories" as never)} accessibilityRole="button"><Text style={{ color: theme.colors.accent, fontWeight: "700" }}>See all</Text></Pressable>}>
     <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.rail}>
       {rootCategories.map((item) => {
         const image = resolveAssetUrl(item.image || item.thumbnailUrl);

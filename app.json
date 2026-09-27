@@ -4,6 +4,9 @@
     "slug": "starry-nights-mobile",
     "version": "1.0.0",
     "icon": "./assets/starry-nights-holidays.png",
+    "splash": {
+      "backgroundColor": "#FFFFFF"
+    },
     "orientation": "portrait",
     "scheme": "starrynights",
     "userInterfaceStyle": "automatic",

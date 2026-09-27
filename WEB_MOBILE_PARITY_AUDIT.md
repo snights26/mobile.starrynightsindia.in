@@ -14,9 +14,9 @@ are present, not that the markup looks identical.
 
 | Status | Count |
 | --- | ---: |
-| FULL | 21 |
-| PARTIAL | 9 |
-| MISSING | 2 |
+| FULL | 25 |
+| PARTIAL | 7 |
+| MISSING | 1 |
 | BROKEN | 0 |
 | INTENTIONALLY DIFFERENT | 3 |
 | NOT APPLICABLE | 2 |
@@ -25,25 +25,25 @@ are present, not that the markup looks identical.
 
 | Area | Web feature | Web source/component | Web API/data | Mobile source/screen | Mobile status | Runtime status | Gap | Recommended mobile equivalent | Priority |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| Home | Hero slides, swipe/auto-advance and CTA | `Header/HeroSlider.jsx` | `/hero-sliders/public` | `app/(tabs)/index.tsx` | FULL | API verified; native carousel static-verified | Added four-second auto-advance, swipe paging, indicators and configured CTA targets | Native paged carousel with indicators | High |
+| Home | Hero slides and readable image-first copy | `Header/HeroSlider.jsx` | `/hero-sliders/public` | `app/(tabs)/index.tsx` | FULL | API verified; native carousel static-verified | Mobile intentionally omits the hero CTA button | Native paged carousel with indicators | High |
 | Home | Category discovery rail | `Common/DynamicRow.jsx`, category content | `/categories` | `CategoryRail.tsx`, Home | FULL | API/tree contents verified | Added a native horizontal rail; tap enters the category tree | Horizontal native rail | High |
-| Home | Global Explorer / Click to Explore | `Pages/Click2Explore/*` | `/categories/tree`, `/packages?regionCode=` | `app/global-explorer.tsx` | FULL | Staging region/package data verified; new UI static-verified | Desktop SVG map is intentionally not copied | Domestic/international segmented region rail | High |
-| Home | World clock entry and time-zone package discovery | `Header/LiveIstClock.jsx`, `Pages/TimeZones/TimeZones.jsx` | category tree; client `Intl` | `app/time-zones.tsx`, Home time card | FULL | Browser page verified; native route static-verified | None | Tappable time card and time-zone list | High |
+| Home | Global Explorer / Click to Explore | `Pages/Click2Explore/*` | `/categories/tree`, `/packages?regionCode=` and public GeoJSON | `app/global-explorer.tsx`, `ExplorerMap.tsx` | FULL | Static-verified; device test pending | The web's 37 India regions and 180 world countries are touch SVG paths, with rails as a fallback | Native segmented map and rail | High |
+| Home | World clock entry and time-zone package discovery | `Header/LiveIstClock.jsx`, `Pages/TimeZones/TimeZones.jsx` | category tree; client `Intl` | `app/time-zones.tsx`, Home action | FULL | Browser page verified; native route static-verified | None | Five native analog/digital clocks and time-zone list | High |
 | Home | Featured home rows | `Rows/DynamicRowsContainer.jsx` | `/featured-rows/public?visibleOn=home` | Home `DiscoveryRow` | FULL | Live API verified | None | Horizontal package/category lists | High |
 | Home | Trending discovery page | `Rows/Trending.jsx` | `/featured-rows/public?visibleOn=trending` | `app/trending.tsx`, discovery shortcuts | FULL | Endpoint verified; native route static-verified | Added discoverable route | Native list by row | High |
 | Home | Homepage statistics | `Pages/AboutUs/Stats.jsx` | `/homepage-statistics/public` | Home statistics block | FULL | Live API verified | None | Compact statistics card | Medium |
 | Home | Occasion popup | `OccasionPopup.jsx` | `/occasion-popups/current` | Home occasion card | PARTIAL | API verified | Mobile displays content but not campaign image or per-campaign dismissal | Native dismissible image/card | Medium |
 | Home | Search entry | header/home search | `/packages` | Home and Explore search entries; `app/search.tsx` | FULL | API verified | None | Dedicated native search screen | High |
 | Home | ATLAS chatbot entry | `Chatbot/Chatbot.jsx` | `/chatbot/query` | `app/chatbot.tsx`, discovery shortcuts | INTENTIONALLY DIFFERENT | Validation verified; no persistent chat was created | Web floating widget becomes a discoverable native screen | Dedicated screen rather than draggable widget | Medium |
-| Home | Light/dark theme control | `theme/ThemeToggle.jsx` | local preference | Theme provider and Settings | FULL | Build verified | None | System/native theme setting | Low |
+| Home | Light/dark theme control | `theme/ThemeToggle.jsx` | local preference | Theme provider and Settings | FULL | Build verified | Persists Light, Dark or System immediately through AsyncStorage | System/native theme setting | Low |
 | Catalogue | All-package catalogue and client-side filtering | `Pages/AllPackages/*` | `/packages` | Explore, Search | PARTIAL | API verified | Mobile lacks web's brand and featured-row query views/pagination controls | Add server-filtered browse entry if brand discovery is prioritised | Medium |
 | Catalogue | Brand-specific collections | `config/brands.js`, `/brands/:brandSlug` | `/packages?brand=` | no dedicated route | MISSING | Source verified | Brand is displayed but cannot be browsed as a collection | Product/design decision: branded collection screen or filters | Low |
 | Packages | Package cards, price, duration, image, save | `Common/PackageCard.jsx` | `/packages` | `PackageCard.tsx` | FULL | API verified | None | Native cards | High |
-| Packages | Detail, gallery, itinerary, inclusions, exclusions, related, share/enquire | `Common/DetailPage.jsx` | `/packages/:code`, `/package-views` | `app/package/[code].tsx` | FULL | Detail API verified | None for exposed data | Accordions and native Share | High |
+| Packages | Detail, gallery, itinerary, inclusions, exclusions, related, share/enquire | `Common/DetailPage.jsx` | `/packages/:code`, `/package-views` | `app/package/[code].tsx` | FULL | Detail API verified; paged gallery static-verified | Horizontal paging, indicators and full-screen viewer replace web lightbox behavior | Accordions and native Share | High |
 | Categories | Root categories and child drill-down | `Pages/AllCategories/*` | `/categories/tree` | `app/category/[code].tsx`, Explore, CategoryRail | FULL | Tree API verified; route static-verified | Added child drill-down | Two-column child grid then packages | High |
 | Gallery | Public grid, modal viewer, progressive loading | `Pages/Gallery/*` | `/gallery/public` | `app/gallery.tsx` | FULL | Gallery API verified | Compact native grid and full-screen viewer replace web load-more presentation | Keep native viewer; add paging only if API pagination is introduced | Low |
 | Updates | Public notification list/filter/document view | `Pages/Notifications/*` | `/notifications/public` | `app/notifications.tsx` | FULL | API verified; route static-verified | Added dynamic type filters | Chips and platform document opening | Medium |
-| Navigation | Header navigation: home, trending, gallery, updates, about, contact, enquire | `Header/Header.jsx`, `Footer.jsx` | routes above | Tabs + `DiscoveryShortcuts.tsx` + stack routes | FULL | Static-verified | Added shortcuts to previously implemented but less discoverable routes | Tabs plus shortcut list | High |
+| Navigation | Header navigation: home, trending, gallery, updates, about, contact, enquire | `Header/Header.jsx`, `Footer.jsx` | routes above | Tabs + Home actions + stack routes | FULL | Static-verified | Visible `What's New` is intentionally removed; valid Notifications remains in Profile | Tabs plus focused shortcut list | High |
 | Contact | Phone/email/maps and contact form | `Pages/Contact/Contact.jsx` | `/contact` | `app/contact.tsx` | FULL | Source/build verified | Platform call/mail/map intents are the appropriate native equivalent of embedded desktop contact controls | Keep external map/call/mail native | Low |
 | Enquiry | Travel form, validation, success/error | `Pages/Enquiry/NewEnquiry.jsx` | `/enquiries` | `app/enquiry.tsx` | FULL | Invalid-payload API contract verified | Added web's `Other` purpose and lead-source choices | Native selectors/date input | High |
 | About | Full company narrative/timeline/team | `Pages/AboutUs/AboutUs.jsx` | static assets | `app/about.tsx` | PARTIAL | Source/build verified | Compact summary omits desktop narrative/team imagery | Product decision: expand native story or link to public page | Low |
@@ -107,18 +107,16 @@ are present, not that the markup looks identical.
 ## Changes made from this audit
 
 1. Added the home category rail and category-tree drill-down.
-2. Added the Global Explorer route with domestic/international region rails;
-   it preserves the web's region-to-package behaviour without porting the
-   desktop SVG maps.
-3. Added a time-zone screen and live home time entry using the web's five
-   `Intl` zones and category mapping.
-4. Added Trending, Gallery, Updates, ATLAS, About and Contact discovery
-   shortcuts so existing screens are reachable from Home.
-5. Added swipeable four-second hero paging and indicators, and passed the
-   actual hero CTA target through to native navigation/external linking instead
-   of always falling back to Explore.
-6. Completed mobile enquiry choices present on web (`Other` purpose and lead
-   source) and added public-notification type filters.
+2. Added the Global Explorer route with touch SVG maps sourced from the same
+   public India/world GeoJSON assets as Web, plus domestic/international rails.
+3. Added five real analog/digital `Intl` clocks and time-zone package discovery.
+4. Made Trending primary navigation and added focused Home actions for
+   Trending, Click to Explore, World Time and Chat with ATLAS.
+5. Made all row `View all` actions collection-specific, with `/packages?rowId=`
+   for package collections and an explicit all-categories screen for categories.
+6. Reworked the mobile hero, statistics, package image gallery, bucket access,
+   Profile trip access and persistent theme selector. Removed visible
+   `What's New`, About and Contact from the Home discovery surface.
 
 ## Product decisions still needed
 

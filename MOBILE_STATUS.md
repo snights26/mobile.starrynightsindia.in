@@ -170,3 +170,38 @@ safe setup and remaining gates.
   `884c3e10-f365-40a6-ba4b-a9b5b6016087` was submitted from commit
   `973341f` for the JavaScript-only discovery changes and is currently in
   progress. No native dependency or Android configuration changed.
+
+## Mobile UX refinement — 2026-09-27
+
+- [x] Home now provides a visible Category rail, every server-configured Home
+  row in API order, and row-specific `View all` routes. Category rows open the
+  category directory, and package rows call the existing `rowId` catalogue
+  filter rather than collapsing into generic Explore.
+- [x] Global Explorer now renders the public site's existing India (37-region)
+  and world (180-country) GeoJSON as an Expo-compatible touch SVG. Domestic /
+  International selection, visible selected state, horizontal fallback rails,
+  and `regionCode` package filtering remain API-driven.
+- [x] Home navigation prioritizes Home, Trending, Bucket and Profile. Explore
+  and Trips remain valid internal routes; Trips and Bucket now appear in the
+  Profile account hub. Home has a bucket button, search, Trending, Click to
+  Explore, World Time and a dedicated Chat with ATLAS action.
+- [x] The hero is image-first, swipeable and four-second auto-advancing with
+  timer cleanup and indicators. Its mobile CTA is intentionally not rendered.
+  Statistics use a responsive two-column card grid.
+- [x] World Time now uses the web's five actual `Intl` zones with analog and
+  digital clocks. The SVG-style clocks use only React Native views; no native
+  mapping or drawing SDK was added.
+- [x] Package media now uses a paged horizontal carousel with current-image
+  indicators, single/missing-image states, error fallback and a full-screen
+  viewer.
+- [x] Settings & Support now persists Light, Dark and System choices through
+  AsyncStorage. The app's white native splash is followed by the exact owner
+  GIF while SecureStore session restoration is in progress.
+- [x] The public Web Header/sidebar and mobile Home no longer expose
+  `What's New`; notification APIs and the renamed Notifications screen remain.
+- [x] `react-native-svg` 15.12.1 is the only new dependency. It is Expo SDK 54
+  compatible. The fixed Vector Icons / Font / Expo Modules Core and native
+  Google graph remains deduplicated and unchanged.
+- [ ] A new Android Preview binary is required because it includes both the
+  native SVG module and the new tracked launch GIF. Device acceptance is
+  pending that exact binary; no new UX/device claim is made here.

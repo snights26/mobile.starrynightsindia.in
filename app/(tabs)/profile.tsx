@@ -7,7 +7,7 @@ import { Screen } from "@/src/components/Screen";
 import { radius, spacing, useAppTheme } from "@/src/theme/theme";
 
 const menu: { label: string; icon: keyof typeof Ionicons.glyphMap; route: string }[] = [
-  { label: "Edit profile", icon: "person-outline", route: "/profile-edit" }, { label: "Payment history", icon: "card-outline", route: "/payments" }, { label: "Recently viewed", icon: "time-outline", route: "/recently-viewed" }, { label: "My travel photos", icon: "images-outline", route: "/my-photos" }, { label: "Notifications", icon: "notifications-outline", route: "/notifications" }, { label: "Settings & support", icon: "settings-outline", route: "/settings" },
+  { label: "Edit profile", icon: "person-outline", route: "/profile-edit" }, { label: "Trips", icon: "airplane-outline", route: "/(tabs)/trips" }, { label: "Bucket list", icon: "heart-outline", route: "/(tabs)/bucket" }, { label: "Payment history", icon: "card-outline", route: "/payments" }, { label: "Recently viewed", icon: "time-outline", route: "/recently-viewed" }, { label: "My travel photos", icon: "images-outline", route: "/my-photos" }, { label: "Notifications", icon: "notifications-outline", route: "/notifications" }, { label: "Settings & support", icon: "settings-outline", route: "/settings" },
 ];
 export default function ProfileScreen() {
   const theme = useAppTheme(); const { user, isAuthenticated, logout } = useAuth();
