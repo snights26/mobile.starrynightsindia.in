@@ -5,7 +5,6 @@ import { router } from "expo-router";
 import { useQuery } from "@tanstack/react-query";
 import { catalogApi, publicApi } from "@/src/api/services";
 import { CategoryRail } from "@/src/components/CategoryRail";
-import { DiscoveryShortcuts } from "@/src/components/DiscoveryShortcuts";
 import { FeaturedRowRail, featuredRowsForPlacement } from "@/src/components/FeaturedRowRail";
 import { ErrorView } from "@/src/components/StateViews";
 import { Screen } from "@/src/components/Screen";
@@ -65,7 +64,6 @@ export default function HomeScreen() {
   if (content.isError) return <Screen><ErrorView message="We could not load the travel catalogue." retry={() => content.refetch()} /></Screen>;
   return <Screen>
     <HomeHero heroes={heroes} />
-    <DiscoveryShortcuts />
     {categories.data ? <CategoryRail categories={categories.data} /> : null}
     {occasion ? <Pressable onPress={() => router.push("/enquiry")} style={[styles.occasion, { backgroundColor: theme.colors.accentSoft }]}><Ionicons name="sparkles" color={theme.colors.accent} size={22} /><View style={{ flex: 1 }}><Text style={[styles.occasionTitle, { color: theme.colors.text }]}>{occasion.title}</Text>{occasion.message ? <Text numberOfLines={2} style={{ color: theme.colors.muted }}>{occasion.message}</Text> : null}</View></Pressable> : null}
     {rows.map((row) => <FeaturedRowRail row={row} placement="home" key={row.id || row.rowId} />)}

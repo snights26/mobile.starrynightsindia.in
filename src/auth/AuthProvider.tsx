@@ -7,7 +7,7 @@ import type { AuthTokens, PackageSummary, User } from "@/src/types/api";
 type AuthContextValue = {
   user: User | null; isAuthenticated: boolean; isLoading: boolean; needsLogin: boolean;
   loginWithGoogle: (idToken: string) => Promise<User>; refreshSession: () => Promise<boolean>; logout: () => Promise<void>;
-  reloadUser: () => Promise<User | null>; toggleBucket: (item: PackageSummary) => Promise<PackageSummary[]>; likedCodes: Set<string>;
+  reloadUser: () => Promise<User | null>; toggleBucket: (item: PackageSummary) => Promise<PackageSummary[]>; likedCodes: Set<string>; bucketItems: PackageSummary[]; bucketLoading: boolean;
 };
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 const refreshLeadMs = 60_000;
@@ -17,6 +17,7 @@ export function AuthProvider({ children }: PropsWithChildren) {
   const [isLoading, setIsLoading] = useState(true);
   const [needsLogin, setNeedsLogin] = useState(false);
   const [liked, setLiked] = useState<PackageSummary[]>([]);
+  const [bucketLoading, setBucketLoading] = useState(false);
   const refreshTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const bootstrapDone = useRef(false);
 
@@ -31,7 +32,7 @@ export function AuthProvider({ children }: PropsWithChildren) {
   }, []);
 
   const endSession = useCallback(async (expired = false) => {
-    stopTimer(); await clearSession(); setUser(null); setLiked([]); if (expired) setNeedsLogin(true);
+    stopTimer(); await clearSession(); setUser(null); setLiked([]); setBucketLoading(false); if (expired) setNeedsLogin(true);
   }, []);
 
   const refreshSession = useCallback(async (): Promise<boolean> => {
@@ -48,7 +49,8 @@ export function AuthProvider({ children }: PropsWithChildren) {
   }, []);
 
   const loadBucket = useCallback(async () => {
-    try { setLiked(await customerApi.bucket()); } catch { setLiked([]); }
+    setBucketLoading(true);
+    try { setLiked(await customerApi.bucket()); } catch { setLiked([]); } finally { setBucketLoading(false); }
   }, []);
 
   useEffect(() => {
@@ -91,7 +93,7 @@ export function AuthProvider({ children }: PropsWithChildren) {
     try { const next = await customerApi.toggleBucket(code); setLiked(next); return next; } catch (error) { setLiked(before); throw error; }
   }, [liked, user]);
 
-  const value = useMemo<AuthContextValue>(() => ({ user, isAuthenticated: Boolean(user), isLoading, needsLogin, loginWithGoogle, refreshSession, logout, reloadUser, toggleBucket, likedCodes: new Set(liked.map((item) => (item.packageCode || item.code).toUpperCase())) }), [user, isLoading, needsLogin, loginWithGoogle, refreshSession, logout, reloadUser, toggleBucket, liked]);
+  const value = useMemo<AuthContextValue>(() => ({ user, isAuthenticated: Boolean(user), isLoading, needsLogin, loginWithGoogle, refreshSession, logout, reloadUser, toggleBucket, likedCodes: new Set(liked.map((item) => (item.packageCode || item.code).toUpperCase())), bucketItems: liked, bucketLoading }), [user, isLoading, needsLogin, loginWithGoogle, refreshSession, logout, reloadUser, toggleBucket, liked, bucketLoading]);
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
 export const useAuth = (): AuthContextValue => {

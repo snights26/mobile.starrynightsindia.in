@@ -8,7 +8,7 @@ import { useAppTheme } from "@/src/theme/theme";
 function RootNavigator() {
   const { isLoading } = useAuth();
   const theme = useAppTheme();
-  if (isLoading) return <><StatusBar style="dark" backgroundColor="#FFFFFF" /><LaunchScreen /></>;
+  if (isLoading) return <><StatusBar style={theme.dark ? "light" : "dark"} backgroundColor={theme.colors.background} /><LaunchScreen /></>;
   return <><StatusBar style={theme.dark ? "light" : "dark"} backgroundColor={theme.colors.surface} /><Stack screenOptions={{ headerBackTitle: "Back", headerShadowVisible: false, headerTitleStyle: { fontWeight: "700", color: theme.colors.text }, headerStyle: { backgroundColor: theme.colors.surface }, headerTintColor: theme.colors.text, contentStyle: { backgroundColor: theme.colors.background } }}>
     <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
     <Stack.Screen name="package/[code]" options={{ title: "Package details" }} />

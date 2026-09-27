@@ -5,7 +5,13 @@
     "version": "1.0.0",
     "icon": "./assets/starry-nights-holidays.png",
     "splash": {
-      "backgroundColor": "#FFFFFF"
+      "image": "./assets/launch/starry-nights-launch.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#F8FAFC",
+      "dark": {
+        "image": "./assets/launch/starry-nights-launch.png",
+        "backgroundColor": "#050505"
+      }
     },
     "orientation": "portrait",
     "scheme": "starrynights",

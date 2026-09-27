@@ -1,6 +1,7 @@
-import { useMemo } from "react";
-import { ActivityIndicator, StyleSheet, Text, View } from "react-native";
+import { useEffect, useMemo, useState } from "react";
+import { ActivityIndicator, Pressable, StyleSheet, Text, View } from "react-native";
 import { useQuery } from "@tanstack/react-query";
+import { Ionicons } from "@expo/vector-icons";
 import Svg, { G, Path, Rect } from "react-native-svg";
 import { WEB_BASE_URL } from "@/src/constants/config";
 import { flattenCategories } from "@/src/constants/discovery";
@@ -28,6 +29,9 @@ const domesticCodes: Record<string, string> = {
   "andaman and nicobar": "DOM-AN", "andaman and nicobar islands": "DOM-AN", "andhra pradesh": "DOM-AP", "arunachal pradesh": "DOM-AR", assam: "DOM-AS", bihar: "DOM-BR", chandigarh: "DOM-CH", chhattisgarh: "DOM-CG", "dadra and nagar haveli": "DOM-DN", "dadra and nagar haveli and daman and diu": "DOM-DN", "daman and diu": "DOM-DD", delhi: "DOM-DL", goa: "DOM-GA", gujarat: "DOM-GJ", haryana: "DOM-HR", "himachal pradesh": "DOM-HP", "jammu and kashmir": "DOM-JK", ladakh: "DOM-LA", jharkhand: "DOM-JH", karnataka: "DOM-KA", kerala: "DOM-KL", lakshadweep: "DOM-LK", "madhya pradesh": "DOM-MP", maharashtra: "DOM-MH", manipur: "DOM-MN", meghalaya: "DOM-MG", mizoram: "DOM-MZ", nagaland: "DOM-NL", odisha: "DOM-OD", puducherry: "DOM-PY", punjab: "DOM-PB", rajasthan: "DOM-RJ", sikkim: "DOM-SK", "tamil nadu": "DOM-TN", telangana: "DOM-TS", tripura: "DOM-TR", "uttar pradesh": "DOM-UP", uttarakhand: "DOM-UK", "west bengal": "DOM-WB",
 };
 const regionColors = ["#F59E0B", "#0EA5E9", "#14B8A6", "#8B5CF6", "#EC4899", "#84CC16", "#F97316", "#06B6D4"];
+const minZoom = 1;
+const maxZoom = 2.25;
+const zoomStep = .25;
 
 const normalise = (value?: unknown) => {
   const raw = String(value ?? "").trim().toLowerCase();
@@ -77,6 +81,8 @@ function resolveCode(feature: GeoFeature, mode: ExplorerMapMode, categoriesByNam
 export function ExplorerMap({ mode, categories, selectedCode, onSelect }: { mode: ExplorerMapMode; categories: Category[]; selectedCode?: string; onSelect: (code: string) => void }) {
   const theme = useAppTheme();
   const config = maps[mode];
+  const [zoom, setZoom] = useState(minZoom);
+  useEffect(() => { setZoom(minZoom); }, [mode]);
   const categoryByName = useMemo(() => new Map(flattenCategories(categories).filter((item) => item.name || item.title).map((item) => [normalise(item.name || item.title), item])), [categories]);
   const map = useQuery({
     queryKey: ["explorer-map", mode, WEB_BASE_URL],
@@ -91,6 +97,11 @@ export function ExplorerMap({ mode, categories, selectedCode, onSelect }: { mode
     staleTime: Infinity,
   });
   const project = useMemo(() => projection(map.data ?? { features: [] }, config.viewBox), [config.viewBox, map.data]);
+  const [boxX, boxY, boxWidth, boxHeight] = config.viewBox.split(/\s+/).map(Number);
+  const centerX = boxX + boxWidth / 2;
+  const centerY = boxY + boxHeight / 2;
+  const zoomTransform = `translate(${centerX} ${centerY}) scale(${zoom}) translate(${-centerX} ${-centerY})`;
+  const updateZoom = (direction: 1 | -1) => setZoom((current) => Math.min(maxZoom, Math.max(minZoom, Number((current + direction * zoomStep).toFixed(2)))));
 
   if (map.isLoading) return <View style={[styles.state, { backgroundColor: theme.colors.soft }]}><ActivityIndicator color={theme.colors.accent} /><Text style={{ color: theme.colors.muted }}>Loading interactive map…</Text></View>;
   if (map.isError || !map.data) return <View style={[styles.state, { backgroundColor: theme.colors.soft }]}><Text style={[styles.stateTitle, { color: theme.colors.text }]}>Map unavailable</Text><Text style={{ color: theme.colors.muted }}>Use the region list below to explore current journeys.</Text></View>;
@@ -98,6 +109,7 @@ export function ExplorerMap({ mode, categories, selectedCode, onSelect }: { mode
   return <View style={[styles.frame, { borderColor: theme.colors.border, backgroundColor: config.background }]}>
     <Svg width="100%" height={mode === "domestic" ? 340 : 236} viewBox={config.viewBox} preserveAspectRatio="xMidYMid meet" accessibilityRole="image" accessibilityLabel={`${mode === "domestic" ? "India" : "World"} interactive region map`}>
       <Rect x="1" y="1" width={mode === "domestic" ? 200 : 246} height={mode === "domestic" ? 256 : 166} rx="12" fill={config.background} />
+      <G transform={zoomTransform}>
       {(map.data.features ?? []).map((feature, index) => {
         const code = resolveCode(feature, mode, categoryByName);
         const selectable = Boolean(code && code.startsWith(config.prefix));
@@ -106,16 +118,23 @@ export function ExplorerMap({ mode, categories, selectedCode, onSelect }: { mode
         const path = pathFor(feature, project);
         const select = () => { if (selectable) onSelect(code!); };
         return <G key={`${label}-${index}`} accessible={selectable} accessibilityRole={selectable ? "button" : undefined} accessibilityLabel={selectable ? `Show packages for ${label}` : label} onPress={select} onPressIn={select}>
-          <Path d={path} fill={selected ? theme.colors.accent : selectable ? regionColors[index % regionColors.length] : "rgba(100,116,139,0.32)"} stroke={selected ? "#FFFFFF" : "rgba(15,23,42,0.42)"} strokeWidth={selected ? 1.4 : 0.35} opacity={selectable || selected ? 1 : 0.55} pointerEvents="none" />
+          <Path d={path} fill={selected ? theme.colors.accent : selectable ? regionColors[index % regionColors.length] : "rgba(100,116,139,0.32)"} stroke={selected ? theme.colors.accentStrong : "rgba(15,23,42,0.42)"} strokeWidth={selected ? 1.6 : 0.35} opacity={selectable || selected ? 1 : 0.55} pointerEvents="none" />
           {selectable ? <Path d={path} fill="rgba(0,0,0,0.01)" stroke="rgba(0,0,0,0.01)" strokeWidth={8} onPress={select} onPressIn={select} /> : null}
         </G>;
       })}
+      </G>
     </Svg>
+    <View style={styles.zoomControls} accessibilityLabel="Map zoom controls">
+      <Pressable onPress={() => updateZoom(1)} disabled={zoom >= maxZoom} accessibilityRole="button" accessibilityLabel="Zoom in map" style={[styles.zoomButton, { backgroundColor: theme.colors.surface, borderColor: theme.colors.border, opacity: zoom >= maxZoom ? .45 : 1 }]}><Ionicons name="add" size={22} color={theme.colors.text} /></Pressable>
+      <Pressable onPress={() => updateZoom(-1)} disabled={zoom <= minZoom} accessibilityRole="button" accessibilityLabel="Zoom out map" style={[styles.zoomButton, { backgroundColor: theme.colors.surface, borderColor: theme.colors.border, opacity: zoom <= minZoom ? .45 : 1 }]}><Ionicons name="remove" size={22} color={theme.colors.text} /></Pressable>
+    </View>
   </View>;
 }
 
 const styles = StyleSheet.create({
-  frame: { borderWidth: 1, borderRadius: radius.lg, overflow: "hidden", padding: spacing.xs },
+  frame: { borderWidth: 1, borderRadius: radius.lg, overflow: "hidden", padding: spacing.xs, position: "relative" },
+  zoomControls: { position: "absolute", top: spacing.sm, right: spacing.sm, gap: spacing.xs },
+  zoomButton: { width: 42, height: 42, borderWidth: 1, borderRadius: 21, alignItems: "center", justifyContent: "center" },
   state: { minHeight: 170, borderRadius: radius.lg, alignItems: "center", justifyContent: "center", gap: spacing.xs, padding: spacing.lg },
   stateTitle: { fontWeight: "800", fontSize: 16 },
 });
