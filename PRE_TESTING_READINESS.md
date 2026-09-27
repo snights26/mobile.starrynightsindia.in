@@ -51,7 +51,7 @@ assertions only. It is not present in mobile application code.
 | `npm run typecheck` | PASS |
 | `npm run lint` | PASS |
 | `npx expo config --type public` | PASS with the verified staging API target; no secret values are present in public config |
-| `npx expo-doctor` | INCONCLUSIVE — the Windows host did not return a usable report after two attempts; not treated as PASS |
+| `npx expo-doctor` | PASS — 18/18 checks on 2026-09-27 after installing `expo-constants` directly and aligning React Native to Expo SDK 54's supported 0.81.5 patch |
 | Android JS export | PASS — staging-configured Android bundle exported successfully on 2026-09-27; temporary output is ignored |
 | `npm run staging:smoke` | PASS — verified health, public home/catalogue/category/package/gallery content and safe enquiry/chatbot validation against the Vercel staging API |
 | Staging smoke production-host guard | PASS — script refuses production before any request |

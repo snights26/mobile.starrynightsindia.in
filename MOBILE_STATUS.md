@@ -48,8 +48,8 @@ Status labels: **IMPLEMENTED** means code is connected to the existing contract;
 
 - [x] Typecheck — BUILD VERIFIED
 - [x] Lint — BUILD VERIFIED
-- [ ] Expo Doctor — HOST INCONCLUSIVE; no usable report returned from this Windows host, so it is not marked verified
-- [x] Android JS bundle export — BUILD VERIFIED on 2026-09-26 with the verified staging API environment loaded
+- [x] Expo Doctor — BUILD VERIFIED on 2026-09-27 (18/18 checks passed after installing Expo Router's direct `expo-constants` peer and aligning React Native to SDK 54 patch 0.81.5)
+- [x] Android JS bundle export — BUILD VERIFIED on 2026-09-27 with the verified staging API environment loaded
 - [x] Metro startup smoke test — RUNTIME VERIFIED on 2026-09-25 (Metro served HTTP 200 on localhost)
 - [x] Public API compatibility — LIVE STAGING API VERIFIED on `https://node-api-starrynightsindia-in.vercel.app/api`; read-only home, catalogue, category, package-detail, gallery and public-notification calls returned the standard success envelope
 - [x] Chatbot invalid-request validation — LIVE API VERIFIED (HTTP 400, no interaction created)
@@ -82,9 +82,10 @@ Status labels: **IMPLEMENTED** means code is connected to the existing contract;
   401/403 JSON authorization envelopes in direct staging API checks. The old
   hosted production/proxy discrepancy remains a deployment gate, not a mobile
   code change.
-- This pass: mobile `typecheck` and `lint` passed. Expo Doctor did not produce
-  a completion result after two host attempts and is **HOST BLOCKED**. A later
-  Android JS export completed successfully; its temporary output was removed.
+- This pass: mobile `typecheck`, `lint`, and Android JS export passed. Expo
+  Doctor initially found a missing direct `expo-constants` peer and an SDK 54
+  React Native patch mismatch; both were aligned and the final Doctor run
+  passed all 18 checks.
 - Android now has a registered OAuth client and a native Credential Manager
   implementation. iOS remains intentionally disabled until it has its own
   client ID and reversed URL scheme.
@@ -133,6 +134,9 @@ Status labels: **IMPLEMENTED** means code is connected to the existing contract;
   it requires an iOS reversed client scheme, and iOS has no approved client.
   Android needs no `google-services.json` when `webClientId` is configured
   explicitly; React Native autolinking supplies the Android native module.
+- Expo Router's direct `expo-constants` peer is installed and React Native is
+  pinned to Expo SDK 54's supported 0.81.5 patch. These changes do not alter
+  the locked Vector Icons/Font/Core compatibility set.
 
 See `MOBILE_STAGING_SETUP.md` and `PRE_TESTING_READINESS.md` for the exact
 safe setup and remaining gates.

@@ -40,9 +40,9 @@ webhook secret, SMTP password, or Cloudinary API secret in `EXPO_PUBLIC_*`,
 
 ## Expo SDK decision
 
-Current compatible set is Expo SDK 54 (`expo ~54.0.0`), React Native 0.81,
+Current compatible set is Expo SDK 54 (`expo ~54.0.0`), React Native 0.81.5,
 Expo Router 6, SecureStore 15, AuthSession 7 (web only), Image Picker 17,
-Nitro Google Sign-In 2.3.0, and Nitro Modules 0.37.1. The prior
+Expo Constants 18, Nitro Google Sign-In 2.3.0, and Nitro Modules 0.37.1. The prior
 production-only audit reports 15 moderate and 2 high upstream SDK/tooling
 advisories with no demonstrated app-specific runtime exploit and no critical
 finding. Available audit remediation requires a coordinated major Expo upgrade
