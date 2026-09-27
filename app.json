@@ -4,15 +4,6 @@
     "slug": "starry-nights-mobile",
     "version": "1.0.0",
     "icon": "./assets/starry-nights-holidays.png",
-    "splash": {
-      "image": "./assets/launch/starry-nights-launch.png",
-      "resizeMode": "contain",
-      "backgroundColor": "#F8FAFC",
-      "dark": {
-        "image": "./assets/launch/starry-nights-launch.png",
-        "backgroundColor": "#050505"
-      }
-    },
     "orientation": "portrait",
     "scheme": "starrynights",
     "userInterfaceStyle": "automatic",
@@ -37,6 +28,19 @@
     },
     "plugins": [
       "expo-router",
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/launch/starry-nights-launch.png",
+          "imageWidth": 320,
+          "resizeMode": "contain",
+          "backgroundColor": "#F8FAFC",
+          "dark": {
+            "image": "./assets/launch/starry-nights-launch.png",
+            "backgroundColor": "#000000"
+          }
+        }
+      ],
       "expo-secure-store",
       [
         "expo-image-picker",
