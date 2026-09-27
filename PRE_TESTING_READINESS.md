@@ -74,3 +74,9 @@ assertions only. It is not present in mobile application code.
 has the staging API and Android/Web public OAuth configuration in `preview`.
 Native Android Google acceptance is pending the next internal APK; the
 application has no production database connection.
+
+Current native-Google candidate: internal Preview build
+`313e7824-6048-421f-8be1-b45b71274322` (cache-cleared, in progress when this
+document was updated). Do not install superseded build
+`6dd15eb8-061e-4008-9247-8a421b7b53b3`, which was cancelled before completion
+after the Expo SDK alignment correction.

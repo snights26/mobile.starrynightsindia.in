@@ -137,6 +137,11 @@ Status labels: **IMPLEMENTED** means code is connected to the existing contract;
 - Expo Router's direct `expo-constants` peer is installed and React Native is
   pinned to Expo SDK 54's supported 0.81.5 patch. These changes do not alter
   the locked Vector Icons/Font/Core compatibility set.
+- Cache-cleared internal Preview build
+  `313e7824-6048-421f-8be1-b45b71274322` is the pending native-Google
+  acceptance candidate. The earlier build `6dd15eb8-061e-4008-9247-8a421b7b53b3`
+  was deliberately cancelled after Expo Doctor identified the SDK alignment
+  fix; it must not be installed.
 
 See `MOBILE_STAGING_SETUP.md` and `PRE_TESTING_READINESS.md` for the exact
 safe setup and remaining gates.
