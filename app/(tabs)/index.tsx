@@ -21,7 +21,9 @@ const codeFor = (category: Category) => category.code || category.categoryCode;
 function DiscoveryRow({ row }: { row: FeaturedRow }) {
   const theme = useAppTheme();
   const packages = row.items.filter((item): item is PackageSummary => "packageCode" in item);
-  const categories = row.items.filter((item): item is Category => "categoryCode" in item && !("packageCode" in item));
+  // Featured-row category items are intentionally compact API objects
+  // (`code`, `title`, `type`) rather than the full category-tree shape.
+  const categories = row.items.filter((item): item is Category => !("packageCode" in item) && String((item as { type?: string }).type ?? "").toLowerCase() === "category");
   const isCategory = row.type === "category" || row.rowType === "category";
   if (!packages.length && !categories.length) return null;
   const openAll = () => {
