@@ -231,3 +231,11 @@ safe setup and remaining gates.
   response quick-reply chips; the public dashboard no longer renders its
   Enquiry card. These changes remain **BUILD VERIFIED** pending the next exact
   Preview APK installation and physical-device acceptance.
+- Cache-cleared Preview build `8fc029f9-0f43-47b4-8c84-87c28906cee1` finished
+  from source commit `144d406daf728d825baebb0835d4dab001ed8abb`; its internal
+  APK is available through the EAS build page. The attempted ADB acceptance on
+  2026-09-27 could not begin because `adb devices -l` returned no connected
+  device. The downloaded test APK was removed from the workspace temporary
+  directory and was never tracked. Reconnect/authorize the Android device,
+  then install this exact build before marking any corrected visual interaction
+  as runtime verified.
