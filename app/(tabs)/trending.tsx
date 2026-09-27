@@ -1,20 +1,24 @@
-import { ScrollView, StyleSheet } from "react-native";
+import { StyleSheet, Text, View } from "react-native";
 import { useQuery } from "@tanstack/react-query";
 import { catalogApi } from "@/src/api/services";
-import { PackageCard } from "@/src/components/PackageCard";
-import { Section } from "@/src/components/Section";
+import { FeaturedRowRail, featuredRowsForPlacement } from "@/src/components/FeaturedRowRail";
 import { Screen } from "@/src/components/Screen";
 import { EmptyView, ErrorView, LoadingView } from "@/src/components/StateViews";
-import { spacing } from "@/src/theme/theme";
-import type { FeaturedRow, PackageSummary } from "@/src/types/api";
+import { radius, spacing, useAppTheme } from "@/src/theme/theme";
 
 export default function TrendingScreen() {
+  const theme = useAppTheme();
   const rows = useQuery({ queryKey: ["featured", "trending"], queryFn: () => catalogApi.featured("trending") });
   if (rows.isLoading) return <Screen><LoadingView label="Loading trending journeys…" /></Screen>;
   if (rows.isError) return <Screen><ErrorView retry={() => rows.refetch()} message="Trending journeys could not be loaded." /></Screen>;
-  const visibleRows = (rows.data ?? []).map((row) => ({ ...row, packages: row.items.filter((item): item is PackageSummary => "packageCode" in item) })).filter((row) => row.packages.length);
-  if (!visibleRows.length) return <Screen><EmptyView title="No trending journeys yet" message="Please check back soon for the latest Starry Nights highlights." /></Screen>;
-  return <Screen>{visibleRows.map((row: FeaturedRow & { packages: PackageSummary[] }) => <Section key={row.id || row.rowId} title={row.title || row.rowTitle || "Trending journeys"}><ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.rail}>{row.packages.map((item) => <PackageCard key={item.packageCode || item.code} item={item} />)}</ScrollView></Section>)}</Screen>;
+  const visibleRows = featuredRowsForPlacement(rows.data ?? [], "trending");
+  return <Screen>
+    <View style={[styles.hero, { backgroundColor: theme.colors.nav }]}><Text style={styles.eyebrow}>WHAT TRAVELLERS LOVE NOW</Text><Text style={styles.heroTitle}>Trending journeys</Text><Text style={styles.heroCopy}>Browse the live, server-curated collections that are currently drawing attention.</Text></View>
+    {visibleRows.map((row) => <FeaturedRowRail key={row.id || row.rowId} row={row} placement="trending" />)}
+    {!visibleRows.length ? <EmptyView title="No trending journeys yet" message="Please check back soon for the latest Starry Nights highlights." /> : null}
+  </Screen>;
 }
 
-const styles = StyleSheet.create({ rail: { gap: spacing.sm, paddingRight: spacing.md } });
+const styles = StyleSheet.create({
+  hero: { borderRadius: radius.lg, padding: spacing.lg, gap: spacing.xs }, eyebrow: { color: "#FCA5A5", fontSize: 11, letterSpacing: 1, fontWeight: "900" }, heroTitle: { color: "#fff", fontSize: 26, fontWeight: "900" }, heroCopy: { color: "#E2E8F0", lineHeight: 20 },
+});

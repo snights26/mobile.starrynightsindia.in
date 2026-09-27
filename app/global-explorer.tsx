@@ -31,6 +31,7 @@ const explorerCopy: Record<ExplorerMode, { title: string; eyebrow: string; descr
 
 const codeFor = (category: Category) => category.code || category.categoryCode;
 const nameFor = (category?: Category) => category?.name || category?.title || "Choose a region";
+const packageCategoryCode = (regionCode?: string) => regionCode === "DOM-CG" ? "DOM-CT" : regionCode;
 
 export default function GlobalExplorerScreen() {
   const theme = useAppTheme();
@@ -50,7 +51,7 @@ export default function GlobalExplorerScreen() {
   const selectedCode = selectedByMode[mode];
 
   useEffect(() => {
-    if (regions.some((item) => codeFor(item) === selectedCode)) return;
+    if (selectedCode) return;
     const fallback = regions.find((item) => codeFor(item) === copy.fallback) ?? regions[0];
     if (fallback) setSelectedByMode((current) => ({ ...current, [mode]: codeFor(fallback) }));
   }, [copy.fallback, mode, regions, selectedCode]);
@@ -58,7 +59,7 @@ export default function GlobalExplorerScreen() {
   const selected = regions.find((item) => codeFor(item) === selectedCode);
   const packages = useQuery({
     queryKey: ["global-explorer", selectedCode],
-    queryFn: () => catalogApi.packages({ regionCode: selectedCode }),
+    queryFn: () => catalogApi.packages({ regionCode: packageCategoryCode(selectedCode) }),
     enabled: Boolean(selectedCode),
   });
   const chooseRegion = (region: Category) => setSelectedByMode((current) => ({ ...current, [mode]: codeFor(region) }));

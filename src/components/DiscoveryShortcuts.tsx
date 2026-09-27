@@ -1,7 +1,6 @@
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
-import { Section } from "@/src/components/Section";
 import { radius, spacing, useAppTheme } from "@/src/theme/theme";
 
 const shortcuts: { label: string; icon: keyof typeof Ionicons.glyphMap; route: string }[] = [
@@ -13,7 +12,7 @@ const shortcuts: { label: string; icon: keyof typeof Ionicons.glyphMap; route: s
 
 export function DiscoveryShortcuts() {
   const theme = useAppTheme();
-  return <Section title="Start exploring"><View style={styles.grid}>{shortcuts.map((item) => <Pressable key={item.route} onPress={() => router.push(item.route as never)} accessibilityRole="button" accessibilityLabel={item.label} style={[styles.item, { backgroundColor: theme.colors.card, borderColor: theme.colors.border }]}><Ionicons name={item.icon} size={21} color={theme.colors.accent} /><Text numberOfLines={2} style={[styles.label, { color: theme.colors.text }]}>{item.label}</Text></Pressable>)}</View></Section>;
+  return <View style={styles.grid}>{shortcuts.map((item) => <Pressable key={item.route} onPress={() => router.push(item.route as never)} accessibilityRole="button" accessibilityLabel={item.label} style={[styles.item, { backgroundColor: theme.colors.card, borderColor: theme.colors.border }]}><Ionicons name={item.icon} size={21} color={theme.colors.accent} /><Text numberOfLines={2} style={[styles.label, { color: theme.colors.text }]}>{item.label}</Text></Pressable>)}</View>;
 }
 
 const styles = StyleSheet.create({

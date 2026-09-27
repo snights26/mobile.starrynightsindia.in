@@ -27,11 +27,11 @@ are present, not that the markup looks identical.
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | Home | Hero slides and readable image-first copy | `Header/HeroSlider.jsx` | `/hero-sliders/public` | `app/(tabs)/index.tsx` | FULL | API verified; native carousel static-verified | Mobile intentionally omits the hero CTA button | Native paged carousel with indicators | High |
 | Home | Category discovery rail | `Common/DynamicRow.jsx`, category content | `/categories` | `CategoryRail.tsx`, Home | FULL | API/tree contents verified | Added a native horizontal rail; tap enters the category tree | Horizontal native rail | High |
-| Home | Global Explorer / Click to Explore | `Pages/Click2Explore/*` | `/categories/tree`, `/packages?regionCode=` and public GeoJSON | `app/global-explorer.tsx`, `ExplorerMap.tsx` | FULL | Static-verified; device test pending | The web's 37 India regions and 180 world countries are touch SVG paths, with rails as a fallback | Native segmented map and rail | High |
+| Home | Global Explorer / Click to Explore | `Pages/Click2Explore/*` | `/categories/tree`, `/packages?regionCode=` and public GeoJSON | `app/global-explorer.tsx`, `ExplorerMap.tsx` | FULL | Static-verified; corrected same-geometry SVG path taps pending device acceptance | The web's 37 India regions and 180 world countries are touch SVG paths, with rails as a fallback | Native segmented map and rail | High |
 | Home | World clock entry and time-zone package discovery | `Header/LiveIstClock.jsx`, `Pages/TimeZones/TimeZones.jsx` | category tree; client `Intl` | `app/time-zones.tsx`, Home action | FULL | Browser page verified; native route static-verified | None | Five native analog/digital clocks and time-zone list | High |
-| Home | Featured home rows | `Rows/DynamicRowsContainer.jsx` | `/featured-rows/public?visibleOn=home` | Home `DiscoveryRow` | FULL | Live API verified | None | Horizontal package/category lists | High |
-| Home | Trending discovery page | `Rows/Trending.jsx` | `/featured-rows/public?visibleOn=trending` | `app/trending.tsx`, discovery shortcuts | FULL | Endpoint verified; native route static-verified | Added discoverable route | Native list by row | High |
-| Home | Homepage statistics | `Pages/AboutUs/Stats.jsx` | `/homepage-statistics/public` | Home statistics block | FULL | Live API verified | None | Compact statistics card | Medium |
+| Home | Featured home rows | `Rows/DynamicRowsContainer.jsx` | `/featured-rows/public?visibleOn=home` | Home `FeaturedRowRail` | FULL | Live API metadata verified; device test pending | Mobile filters on exact `visibleOn=home`, preserves `sequence`, and uses row identity for View all | Horizontal package/category lists | High |
+| Home | Trending discovery page | `Rows/Trending.jsx` | `/featured-rows/public?visibleOn=trending` | `app/trending.tsx`, discovery shortcuts | FULL | Live API metadata verified; device test pending | Mobile filters on exact `visibleOn=trending`, preserves `sequence`, and includes category rows | Native list by row | High |
+| About | Homepage statistics | `Pages/AboutUs/Stats.jsx` | `/homepage-statistics/public` | `app/about.tsx` | FULL | Live API verified; device layout pending | Deliberately moved off the crowded Home surface | Compact statistics card | Medium |
 | Home | Occasion popup | `OccasionPopup.jsx` | `/occasion-popups/current` | Home occasion card | PARTIAL | API verified | Mobile displays content but not campaign image or per-campaign dismissal | Native dismissible image/card | Medium |
 | Home | Search entry | header/home search | `/packages` | Home and Explore search entries; `app/search.tsx` | FULL | API verified | None | Dedicated native search screen | High |
 | Home | ATLAS chatbot entry | `Chatbot/Chatbot.jsx` | `/chatbot/query` | `app/chatbot.tsx`, discovery shortcuts | INTENTIONALLY DIFFERENT | Validation verified; no persistent chat was created | Web floating widget becomes a discoverable native screen | Dedicated screen rather than draggable widget | Medium |
@@ -113,7 +113,8 @@ are present, not that the markup looks identical.
 4. Made Trending primary navigation and added focused Home actions for
    Trending, Click to Explore, World Time and Chat with ATLAS.
 5. Made all row `View all` actions collection-specific, with `/packages?rowId=`
-   for package collections and an explicit all-categories screen for categories.
+   for package collections and an explicit server-row category collection screen
+   keyed by `rowId` and `visibleOn` for compact featured categories.
 6. Reworked the mobile hero, statistics, package image gallery, bucket access,
    Profile trip access and persistent theme selector. Removed visible
    `What's New`, About and Contact from the Home discovery surface.
@@ -131,9 +132,9 @@ are present, not that the markup looks identical.
 
 - No customer enquiry, payment, email, photo mutation, or private document
   download was created during this audit.
-- New parity screens are JavaScript-only. They passed static checks; internal
-  Preview build `884c3e10-f365-40a6-ba4b-a9b5b6016087` was submitted from
-  commit `973341f` for physical-device UI acceptance.
+- The current device-feedback corrections are JavaScript-only. They passed
+  typecheck, lint and Android export; the next internal Preview APK must be
+  installed before visual/device-only functionality is marked verified.
 - Google account selection, backend audience acceptance, refresh and logout
   were manually observed by the owner on the current Preview build. Automated
   ADB verification independently confirmed the installed app process remains

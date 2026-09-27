@@ -21,20 +21,40 @@ const guestId = async () => { const current = await AsyncStorage.getItem(GUEST_K
 function MediaCarousel({ images, name }: { images: string[]; name: string }) {
   const theme = useAppTheme();
   const list = useRef<FlatList<string>>(null);
-  const { width } = useWindowDimensions();
-  const imageWidth = Math.max(1, width - spacing.md * 2);
+  const viewerList = useRef<FlatList<string>>(null);
+  const { width: windowWidth, height: windowHeight } = useWindowDimensions();
+  const [viewportWidth, setViewportWidth] = useState(Math.max(1, windowWidth - spacing.md * 2));
   const [activeIndex, setActiveIndex] = useState(0);
   const [viewerVisible, setViewerVisible] = useState(false);
   const [failedImages, setFailedImages] = useState<Set<string>>(() => new Set());
-  useEffect(() => { setActiveIndex(0); setViewerVisible(false); setFailedImages(new Set()); list.current?.scrollToOffset({ offset: 0, animated: false }); }, [images]);
-  useEffect(() => { list.current?.scrollToOffset({ offset: activeIndex * imageWidth, animated: false }); }, [activeIndex, imageWidth]);
-  const activeImage = images[Math.min(activeIndex, images.length - 1)];
-  if (!images.length) return <View style={[styles.hero, styles.imageFallback, { backgroundColor: theme.colors.soft }]}><Ionicons name="image-outline" size={40} color={theme.colors.muted} /><Text style={{ color: theme.colors.muted }}>Package photos are unavailable</Text></View>;
+  const imageKey = images.join("|");
+  const updateIndex = (offset: number, width: number) => setActiveIndex(Math.max(0, Math.min(images.length - 1, Math.round(offset / Math.max(width, 1)))));
   const markFailed = (uri: string) => setFailedImages((current) => new Set(current).add(uri));
-  return <View style={styles.gallery}>
-    <FlatList ref={list} data={images} horizontal pagingEnabled showsHorizontalScrollIndicator={false} keyExtractor={(item) => item} getItemLayout={(_, index) => ({ length: imageWidth, offset: imageWidth * index, index })} onMomentumScrollEnd={(event) => setActiveIndex(Math.round(event.nativeEvent.contentOffset.x / imageWidth))} renderItem={({ item, index }) => <Pressable onPress={() => setViewerVisible(true)} accessibilityRole="button" accessibilityLabel={`Open image ${index + 1} of ${images.length} for ${name}`} style={[styles.slide, { width: imageWidth }]}>{failedImages.has(item) ? <View style={[styles.hero, styles.imageFallback, { backgroundColor: theme.colors.soft }]}><Ionicons name="image-outline" size={40} color={theme.colors.muted} /></View> : <Image source={{ uri: item }} style={styles.hero} resizeMode="cover" onError={() => markFailed(item)} />}</Pressable>} />
+
+  useEffect(() => {
+    setActiveIndex(0); setViewerVisible(false); setFailedImages(new Set());
+    requestAnimationFrame(() => list.current?.scrollToOffset({ offset: 0, animated: false }));
+  }, [imageKey]);
+  useEffect(() => { requestAnimationFrame(() => list.current?.scrollToOffset({ offset: activeIndex * viewportWidth, animated: false })); }, [activeIndex, viewportWidth]);
+
+  if (!images.length) return <View style={[styles.hero, styles.imageFallback, { backgroundColor: theme.colors.soft }]}><Ionicons name="image-outline" size={40} color={theme.colors.muted} /><Text style={{ color: theme.colors.muted }}>Package photos are unavailable</Text></View>;
+  return <View style={styles.gallery} onLayout={(event) => setViewportWidth(Math.max(1, Math.round(event.nativeEvent.layout.width)))}>
+    <FlatList
+      ref={list}
+      data={images}
+      horizontal
+      pagingEnabled
+      disableIntervalMomentum
+      showsHorizontalScrollIndicator={false}
+      style={{ width: viewportWidth, height: 245 }}
+      keyExtractor={(item) => item}
+      onMomentumScrollEnd={(event) => updateIndex(event.nativeEvent.contentOffset.x, viewportWidth)}
+      renderItem={({ item, index }) => <Pressable onPress={() => setViewerVisible(true)} accessibilityRole="button" accessibilityLabel={`Open image ${index + 1} of ${images.length} for ${name}`} style={[styles.slide, { width: viewportWidth }]}>{failedImages.has(item) ? <View style={[styles.hero, styles.imageFallback, { backgroundColor: theme.colors.soft }]}><Ionicons name="image-outline" size={40} color={theme.colors.muted} /></View> : <Image source={{ uri: item }} style={styles.hero} resizeMode="cover" onError={() => markFailed(item)} />}</Pressable>}
+    />
     {images.length > 1 ? <><View style={[styles.imageCount, { backgroundColor: "rgba(0,0,0,.62)" }]}><Text style={styles.imageCountText}>{activeIndex + 1} / {images.length}</Text></View><View style={styles.dots}>{images.map((image, index) => <View key={image} style={[styles.dot, { width: index === activeIndex ? 18 : 6, backgroundColor: index === activeIndex ? theme.colors.accent : theme.colors.border }]} />)}</View></> : null}
-    <Modal visible={viewerVisible} transparent animationType="fade" onRequestClose={() => setViewerVisible(false)}><View style={styles.viewer}><Pressable onPress={() => setViewerVisible(false)} accessibilityRole="button" accessibilityLabel="Close full-screen image" style={styles.closeViewer}><Ionicons name="close" size={27} color="#fff" /></Pressable>{activeImage && !failedImages.has(activeImage) ? <Image source={{ uri: activeImage }} style={styles.fullImage} resizeMode="contain" onError={() => markFailed(activeImage)} /> : <Ionicons name="image-outline" size={56} color="#fff" />}</View></Modal>
+    <Modal visible={viewerVisible} animationType="fade" onRequestClose={() => setViewerVisible(false)} onShow={() => requestAnimationFrame(() => viewerList.current?.scrollToOffset({ offset: activeIndex * windowWidth, animated: false }))}>
+      <View style={styles.viewer}><Pressable onPress={() => setViewerVisible(false)} accessibilityRole="button" accessibilityLabel="Close full-screen image" style={styles.closeViewer}><Ionicons name="close" size={27} color="#fff" /></Pressable><FlatList ref={viewerList} data={images} horizontal pagingEnabled showsHorizontalScrollIndicator={false} keyExtractor={(item) => `viewer-${item}`} style={{ width: windowWidth, height: windowHeight }} onMomentumScrollEnd={(event) => updateIndex(event.nativeEvent.contentOffset.x, windowWidth)} renderItem={({ item, index }) => <View style={{ width: windowWidth, height: windowHeight, alignItems: "center", justifyContent: "center" }}>{failedImages.has(item) ? <Ionicons name="image-outline" size={56} color="#fff" /> : <Image source={{ uri: item }} style={styles.fullImage} resizeMode="contain" accessibilityLabel={`${name}, image ${index + 1} of ${images.length}`} onError={() => markFailed(item)} />}</View>} /></View>
+    </Modal>
   </View>;
 }
 

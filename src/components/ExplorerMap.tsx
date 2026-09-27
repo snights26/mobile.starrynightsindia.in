@@ -1,7 +1,7 @@
 import { useMemo } from "react";
 import { ActivityIndicator, StyleSheet, Text, View } from "react-native";
 import { useQuery } from "@tanstack/react-query";
-import Svg, { Path, Rect } from "react-native-svg";
+import Svg, { G, Path, Rect } from "react-native-svg";
 import { WEB_BASE_URL } from "@/src/constants/config";
 import { flattenCategories } from "@/src/constants/discovery";
 import { radius, spacing, useAppTheme } from "@/src/theme/theme";
@@ -24,6 +24,9 @@ const regionAliases: Record<string, string> = {
 const internationalCodes: Record<string, string> = {
   argentina: "INT-ARGENTINA", australia: "INT-AUSTRALIA", bali: "INT-BALI", brazil: "INT-BRAZIL", canada: "INT-CANADA", china: "INT-CHINA", dubai: "INT-DUBAI", egypt: "INT-EGYPT", france: "INT-FRANCE", india: "INT-INDIA", malaysia: "INT-MALAYSIA", maldives: "INT-MALDIVES", mexico: "INT-MEXICO", russia: "INT-RUSSIA", singapore: "INT-SINGAPORE", "south africa": "INT-SOUTH-AFRICA", spain: "INT-SPAIN", switzerland: "INT-SWITZERLAND", thailand: "INT-THAILAND", turkey: "INT-TURKEY", "united kingdom": "INT-UK", "united states": "INT-USA", vietnam: "INT-VIETNAM",
 };
+const domesticCodes: Record<string, string> = {
+  "andaman and nicobar": "DOM-AN", "andaman and nicobar islands": "DOM-AN", "andhra pradesh": "DOM-AP", "arunachal pradesh": "DOM-AR", assam: "DOM-AS", bihar: "DOM-BR", chandigarh: "DOM-CH", chhattisgarh: "DOM-CG", "dadra and nagar haveli": "DOM-DN", "dadra and nagar haveli and daman and diu": "DOM-DN", "daman and diu": "DOM-DD", delhi: "DOM-DL", goa: "DOM-GA", gujarat: "DOM-GJ", haryana: "DOM-HR", "himachal pradesh": "DOM-HP", "jammu and kashmir": "DOM-JK", ladakh: "DOM-LA", jharkhand: "DOM-JH", karnataka: "DOM-KA", kerala: "DOM-KL", lakshadweep: "DOM-LK", "madhya pradesh": "DOM-MP", maharashtra: "DOM-MH", manipur: "DOM-MN", meghalaya: "DOM-MG", mizoram: "DOM-MZ", nagaland: "DOM-NL", odisha: "DOM-OD", puducherry: "DOM-PY", punjab: "DOM-PB", rajasthan: "DOM-RJ", sikkim: "DOM-SK", "tamil nadu": "DOM-TN", telangana: "DOM-TS", tripura: "DOM-TR", "uttar pradesh": "DOM-UP", uttarakhand: "DOM-UK", "west bengal": "DOM-WB",
+};
 const regionColors = ["#F59E0B", "#0EA5E9", "#14B8A6", "#8B5CF6", "#EC4899", "#84CC16", "#F97316", "#06B6D4"];
 
 const normalise = (value?: unknown) => {
@@ -31,8 +34,9 @@ const normalise = (value?: unknown) => {
   return regionAliases[raw] ?? raw;
 };
 const properties = (feature: GeoFeature) => feature.properties ?? {};
-const featureName = (feature: GeoFeature) => properties(feature).name || properties(feature).NAME || properties(feature).ADMIN || properties(feature).ST_NM || "";
-const featureCode = (feature: GeoFeature) => properties(feature).code || properties(feature).regionCode || properties(feature).REGION_CODE || "";
+const featureName = (feature: GeoFeature) => properties(feature).name || properties(feature).label || properties(feature).NAME || properties(feature).ADMIN || properties(feature).admin || properties(feature).ST_NM || properties(feature).NAME_1 || "";
+const featureCode = (feature: GeoFeature) => properties(feature).code || properties(feature).regionCode || properties(feature).REGION_CODE || properties(feature).categoryCode || properties(feature).id || properties(feature).ISO_A3 || properties(feature).ADM1_PCODE || properties(feature).ST_CODE || "";
+const slug = (value: string) => value.trim().toUpperCase().replace(/&/g, "AND").replace(/[^A-Z0-9]+/g, "-").replace(/^-+|-+$/g, "");
 
 const polygons = (feature: GeoFeature): Point[][][] => {
   const geometry = feature.geometry;
@@ -66,7 +70,8 @@ function resolveCode(feature: GeoFeature, mode: ExplorerMapMode, categoriesByNam
   const name = normalise(featureName(feature));
   const category = categoriesByName.get(name);
   if (category) return category.code || category.categoryCode;
-  return mode === "international" ? internationalCodes[name] : undefined;
+  if (mode === "domestic") return domesticCodes[name] || `DOM-${slug(name)}`;
+  return internationalCodes[name] || `INT-${slug(name)}`;
 }
 
 export function ExplorerMap({ mode, categories, selectedCode, onSelect }: { mode: ExplorerMapMode; categories: Category[]; selectedCode?: string; onSelect: (code: string) => void }) {
@@ -91,14 +96,19 @@ export function ExplorerMap({ mode, categories, selectedCode, onSelect }: { mode
   if (map.isError || !map.data) return <View style={[styles.state, { backgroundColor: theme.colors.soft }]}><Text style={[styles.stateTitle, { color: theme.colors.text }]}>Map unavailable</Text><Text style={{ color: theme.colors.muted }}>Use the region list below to explore current journeys.</Text></View>;
 
   return <View style={[styles.frame, { borderColor: theme.colors.border, backgroundColor: config.background }]}>
-    <Svg width="100%" height={mode === "domestic" ? 340 : 236} viewBox={config.viewBox} accessibilityRole="image" accessibilityLabel={`${mode === "domestic" ? "India" : "World"} interactive region map`}>
+    <Svg width="100%" height={mode === "domestic" ? 340 : 236} viewBox={config.viewBox} preserveAspectRatio="xMidYMid meet" accessibilityRole="image" accessibilityLabel={`${mode === "domestic" ? "India" : "World"} interactive region map`}>
       <Rect x="1" y="1" width={mode === "domestic" ? 200 : 246} height={mode === "domestic" ? 256 : 166} rx="12" fill={config.background} />
       {(map.data.features ?? []).map((feature, index) => {
         const code = resolveCode(feature, mode, categoryByName);
         const selectable = Boolean(code && code.startsWith(config.prefix));
         const selected = selectable && code === selectedCode;
         const label = String(featureName(feature) || code || "Map region");
-        return <Path key={`${label}-${index}`} d={pathFor(feature, project)} fill={selected ? theme.colors.accent : selectable ? regionColors[index % regionColors.length] : "rgba(100,116,139,0.32)"} stroke={selected ? "#FFFFFF" : "rgba(15,23,42,0.42)"} strokeWidth={selected ? 1.4 : 0.35} opacity={selectable || selected ? 1 : 0.55} onPress={selectable ? () => onSelect(code!) : undefined} accessible={selectable} accessibilityLabel={selectable ? `Show packages for ${label}` : label} />;
+        const path = pathFor(feature, project);
+        const select = () => { if (selectable) onSelect(code!); };
+        return <G key={`${label}-${index}`} accessible={selectable} accessibilityRole={selectable ? "button" : undefined} accessibilityLabel={selectable ? `Show packages for ${label}` : label} onPress={select} onPressIn={select}>
+          <Path d={path} fill={selected ? theme.colors.accent : selectable ? regionColors[index % regionColors.length] : "rgba(100,116,139,0.32)"} stroke={selected ? "#FFFFFF" : "rgba(15,23,42,0.42)"} strokeWidth={selected ? 1.4 : 0.35} opacity={selectable || selected ? 1 : 0.55} pointerEvents="none" />
+          {selectable ? <Path d={path} fill="rgba(0,0,0,0.01)" stroke="rgba(0,0,0,0.01)" strokeWidth={8} onPress={select} onPressIn={select} /> : null}
+        </G>;
       })}
     </Svg>
   </View>;

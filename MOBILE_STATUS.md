@@ -208,3 +208,26 @@ safe setup and remaining gates.
   fix. It is pending EAS completion and exact-APK physical-device acceptance.
   Superseded build `66011e2d-da82-416f-be9d-f43d9da5a273` was cancelled before
   distribution because it predated the compact category-row fix.
+
+## Device-feedback correction pass — 2026-09-27
+
+- Home and Trending now use the API's exact `visibleOn` field, not a row-title
+  heuristic. Staging metadata currently maps nine configured rows to `home`
+  and ten configured rows to `trending`; the native app carries `rowId` and
+  `visibleOn` through every View all route.
+- A shared SafeArea-aware tab header now owns the Android status-bar inset,
+  persistent search, red Starry Nights branding, Bucket access and the drawer.
+  The drawer is the only Home-adjacent place that labels the secondary map flow
+  as Start Exploring. Root stack and screen backgrounds now follow the selected
+  theme, while the native/JS launch sequence remains deliberately white.
+- Home no longer renders the secondary "Finding remarkable journeys" screen or
+  homepage statistics. The supplied launch GIF remains the sole JS loading
+  visual during secure-session restoration; live statistics are now in About.
+- The Explorer map now gives every rendered GeoJSON path a same-geometry touch
+  target, resolves the full domestic map code set plus international category
+  names/fallback codes, and retains the DOM-CG → DOM-CT catalogue alias.
+- Package media now measures its real viewport before paging and includes a
+  swipeable full-screen gallery. Mobile and public ATLAS no longer render
+  response quick-reply chips; the public dashboard no longer renders its
+  Enquiry card. These changes remain **BUILD VERIFIED** pending the next exact
+  Preview APK installation and physical-device acceptance.

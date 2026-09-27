@@ -51,7 +51,7 @@ export type PackageDetail = PackageSummary & {
 };
 
 export type Hero = { id: string; imageId: string; title: string; subtitle?: string; image?: string; link?: string; active?: boolean; sequence?: number };
-export type FeaturedRow = { id: string; rowId: string; title: string; rowTitle?: string; type: "package" | "category" | "top10" | string; rowType?: string; items: (PackageSummary | Category)[]; sequence?: number };
+export type FeaturedRow = { id: string; rowId: string; title: string; rowTitle?: string; type: "package" | "category" | "top10" | string; rowType?: string; visibleOn?: string; packageMode?: string; categoryMatchOperator?: string; items: (PackageSummary | Category)[]; sequence?: number };
 export type Statistic = { id: string; title: string; value: string; sequence?: number };
 
 export type User = {
