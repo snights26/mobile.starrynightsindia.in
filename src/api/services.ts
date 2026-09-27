@@ -2,13 +2,13 @@ import { del, get, post, put } from "@/src/api/client";
 import type { Category, ChatResponse, DirectUploadAuthorization, EnquiryInput, FeaturedRow, GalleryImage, Hero, Invoice, Notification, PackageDetail, PackageSummary, Payment, RecentlyViewed, Statistic, Tour, User } from "@/src/types/api";
 
 export const catalogApi = {
-  packages: (params?: { category?: string; brand?: string }) => get<PackageSummary[]>("/packages", { params }),
+  packages: (params?: { category?: string; brand?: string; rowId?: string; regionCode?: string }) => get<PackageSummary[]>("/packages", { params }),
   package: (code: string) => get<PackageDetail>(`/packages/${encodeURIComponent(code)}`),
   categories: () => get<Category[]>("/categories"),
   categoryTree: () => get<Category[]>("/categories/tree"),
   categoryPackages: (code: string) => get<PackageSummary[]>(`/categories/${encodeURIComponent(code)}/packages`),
   heroes: () => get<Hero[]>("/hero-sliders/public"),
-  featured: () => get<FeaturedRow[]>("/featured-rows/public", { params: { visibleOn: "home" } }),
+  featured: (visibleOn = "home") => get<FeaturedRow[]>("/featured-rows/public", { params: { visibleOn } }),
   statistics: () => get<Statistic[]>("/homepage-statistics/public"),
 };
 export const customerApi = {

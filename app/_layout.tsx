@@ -7,6 +7,9 @@ export default function RootLayout() {
     <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
     <Stack.Screen name="package/[code]" options={{ title: "Package details" }} />
     <Stack.Screen name="category/[code]" options={{ title: "Packages" }} />
+    <Stack.Screen name="global-explorer" options={{ title: "Global Explorer" }} />
+    <Stack.Screen name="time-zones" options={{ title: "World time" }} />
+    <Stack.Screen name="trending" options={{ title: "Trending experiences" }} />
     <Stack.Screen name="search" options={{ title: "Search packages" }} />
     <Stack.Screen name="login" options={{ title: "Sign in", presentation: "modal" }} />
     <Stack.Screen name="profile-edit" options={{ title: "Your profile" }} />
