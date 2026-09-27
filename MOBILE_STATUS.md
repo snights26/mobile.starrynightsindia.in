@@ -24,8 +24,8 @@ Status labels: **IMPLEMENTED** means code is connected to the existing contract;
 
 ## Customer
 
-- [x] Google authentication — Web AuthSession flow remains unchanged; Android uses native Credential Manager through `react-native-nitro-google-signin` 2.3.0 and sends its ID token to the existing Node API — BUILD VERIFIED / PHYSICAL DEVICE AUTH PENDING
-- [x] Session restore, automatic refresh, invalid-session cleanup — IMPLEMENTED / BUILD VERIFIED; no real credential was used
+- [x] Google authentication — Web continues with Google Identity Services; Android uses native Credential Manager through `react-native-nitro-google-signin` 2.3.0 and sends its ID token to the existing Node API — LIVE STAGING VERIFIED by the owner on Preview build `313e7824-6048-421f-8be1-b45b71274322`
+- [x] Session restore, automatic refresh, invalid-session cleanup — IMPLEMENTED / session persistence RUNTIME VERIFIED; owner verified the normal Google session flow without a test bypass
 - [x] Profile and profile completion — IMPLEMENTED
 - [x] Bucket list — IMPLEMENTED
 - [x] Recently viewed — IMPLEMENTED
@@ -55,7 +55,7 @@ Status labels: **IMPLEMENTED** means code is connected to the existing contract;
 - [x] Chatbot invalid-request validation — LIVE API VERIFIED (HTTP 400, no interaction created)
 - [x] Auth/session safety paths — BUILD VERIFIED by implementation and Android bundle review: SecureStore only, guarded queries, a single 401/bearer-403 refresh retry, failed-refresh cleanup and logout cleanup
 - [x] Dependency audit — `npm audit --omit=dev` reports 15 moderate / 2 high upstream Expo SDK 54 ecosystem advisories. Findings and the non-disruptive upgrade path are in `MOBILE_DEPENDENCY_AUDIT.md`.
-- [x] Android device launch — RUNTIME VERIFIED on the physical Preview APK `fed7d928-e622-4419-a2b5-ea50720a4095`; the app remained open after a fresh installation
+- [x] Android device launch — RUNTIME VERIFIED on physical Preview APK `313e7824-6048-421f-8be1-b45b71274322`; fresh ADB launch remained alive with no old font/native exception
 - [x] iOS configuration — IMPLEMENTED; device verification pending
 - [ ] Device UX checks — cold-start UI, tabs, keyboard, Android back navigation, safe areas, sharing and image rendering require an Android device/emulator
 
@@ -68,7 +68,7 @@ Status labels: **IMPLEMENTED** means code is connected to the existing contract;
 ## Verification environment
 
 - An ignored local `.env` temporarily supplied `EXPO_PUBLIC_API_BASE_URL=https://api.starrynightsindia.in/api`; the value was checked to end in `/api` and removed after the verification run. No API URL is hardcoded in application source.
-- Web Google login is LIVE STAGING VERIFIED. Android native Google login, customer session, customer photo upload, payment link, invoice, and authenticated customer data remain physical-device verification work.
+- Web Google login is LIVE STAGING VERIFIED. Android native Google login and session persistence are LIVE STAGING VERIFIED by the owner; private documents, photo lifecycle, payment link, invoice and broader customer-data screens remain feature-specific physical-device work.
 - The hosted unauthenticated `/users/me` response was an empty HTTP 403 instead of the Node source's anticipated 401 envelope. The Axios interceptor now refreshes once for a 403 only when the original request carried a bearer token; it does not treat a generic unauthenticated 403 as a session refresh trigger.
 - The hosted enquiry validation result differs from the inspected Node source. Do not treat a successful enquiry submission as production-verified until the staging Node deployment/proxy returns the required HTTP 400 error envelope for an invalid payload.
 
@@ -145,3 +145,24 @@ Status labels: **IMPLEMENTED** means code is connected to the existing contract;
 
 See `MOBILE_STAGING_SETUP.md` and `PRE_TESTING_READINESS.md` for the exact
 safe setup and remaining gates.
+
+## Android acceptance and public-web parity — 2026-09-27
+
+- [x] Android Preview build `313e7824-6048-421f-8be1-b45b71274322` — installed
+  by the owner. The owner confirmed native Google sign-in (without Chrome), a
+  successful staging session and persistence after reopening. ADB independently
+  confirmed the connected device process was alive after a fresh launch with no
+  `ReturnTypeKt.getDirectConverter`, `FontLoaderModule`, `ReactNativeJS`, or
+  `FATAL EXCEPTION` crash; the authenticated profile rendered again after a
+  force-stop/relaunch. Account selection, logout and refresh were not replayed
+  by automation so as not to disturb the owner's signed-in staging session.
+- [x] Public discovery parity — IMPLEMENTED: a home category rail, native
+  category-tree drill-down, Global Explorer region discovery, world-time
+  discovery, Trending and additional Home discovery shortcuts are now present.
+  The mobile Global Explorer intentionally uses a tap-first regional rail rather
+  than the desktop site's SVG map.
+- [x] Full comparison matrix — source plus staging-runtime evidence is in
+  `WEB_MOBILE_PARITY_AUDIT.md`. It identifies remaining non-critical product
+  decisions (brands, long-form About/social content, customer-safe transport
+  slips/private invoice downloads) without treating desktop markup as a mobile
+  requirement.

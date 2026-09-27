@@ -12,11 +12,13 @@ The ignored local environment used `https://api.starrynightsindia.in/api` and th
 | --- | --- | --- | --- | --- | --- |
 | GET | `/hero-sliders/public` | Home | No | public hero array | IMPLEMENTED / LIVE API VERIFIED |
 | GET | `/featured-rows/public?visibleOn=home` | Home rows | No | public featured row array | IMPLEMENTED / LIVE API VERIFIED |
+| GET | `/featured-rows/public?visibleOn=trending` | Trending discovery | No | public featured row array | IMPLEMENTED / API CONTRACT VERIFIED |
 | GET | `/homepage-statistics/public` | Home | No | statistic array | IMPLEMENTED / LIVE API VERIFIED |
 | GET | `/occasion-popups/current` | Home promotion | No | popup or null | IMPLEMENTED / LIVE API VERIFIED |
 | GET | `/packages` | Explore/search catalogue | No | package summary array | IMPLEMENTED / LIVE API VERIFIED |
 | GET | `/packages/:code` | Package detail | No | package detail | IMPLEMENTED / LIVE API VERIFIED |
 | GET | `/categories` | Explore | No | category array | IMPLEMENTED / LIVE API VERIFIED |
+| GET | `/categories/tree` | Category rail, drill-down, Global Explorer, World Time | No | nested category array | IMPLEMENTED / LIVE API VERIFIED |
 | GET | `/categories/:code/packages` | Category results | No | package summary array | IMPLEMENTED / LIVE API VERIFIED |
 | POST | `/package-views` | Record view | Optional | `packageCode`, optional guest `sessionIdentifier` / view | IMPLEMENTED |
 | POST | `/enquiries` | Enquiry | No | existing enquiry form fields / enquiry | IMPLEMENTED; hosted invalid-payload validation observed HTTP 200, while current Node source returns HTTP 400 — deployment/proxy verification required |
@@ -24,10 +26,10 @@ The ignored local environment used `https://api.starrynightsindia.in/api` and th
 | GET | `/notifications/public` | Guest updates | No | notification array | IMPLEMENTED / LIVE API VERIFIED |
 | POST | `/chatbot/query` | ATLAS | No | `message`, `sessionId` / chat answer, packages, replies | IMPLEMENTED; invalid-payload validation LIVE API VERIFIED (HTTP 400); normal query not sent to avoid a persistent production interaction |
 | POST | `/contact` | Support form | No | name, email, phone, message / receipt | IMPLEMENTED |
-| POST | `/auth/google` | Google login | No | `{ idToken }` / token session | IMPLEMENTED / LIVE GOOGLE AUTH NOT YET VERIFIED |
-| POST | `/auth/refresh` | Token refresh | No | `{ refreshToken }` / token session | IMPLEMENTED; failure cleanup BUILD VERIFIED |
-| POST | `/auth/logout` | Logout | No | `{ refreshToken }` / message | IMPLEMENTED; cleanup BUILD VERIFIED |
-| GET | `/users/me` | Session/profile | USER | user | IMPLEMENTED; unauthenticated guard BUILD VERIFIED; hosted no-bearer response observed as empty HTTP 403 |
+| POST | `/auth/google` | Google login | No | `{ idToken }` / token session | IMPLEMENTED / LIVE STAGING VERIFIED by the owner with Android native sign-in |
+| POST | `/auth/refresh` | Token refresh | No | `{ refreshToken }` / token session | IMPLEMENTED; owner observed the normal authenticated flow, failure cleanup BUILD VERIFIED |
+| POST | `/auth/logout` | Logout | No | `{ refreshToken }` / message | IMPLEMENTED; owner verified logout; cleanup BUILD VERIFIED |
+| GET | `/users/me` | Session/profile | USER | user | IMPLEMENTED; authenticated profile persistence independently observed by ADB after relaunch; hosted no-bearer response historically observed as empty HTTP 403 |
 | PUT | `/users/:id` | Profile edit | USER/self | supported profile fields / user | IMPLEMENTED |
 | PUT | `/users/me/complete-profile` | Profile completion | USER | name/contact/country/state/city + optional profile fields / user | IMPLEMENTED |
 | GET | `/users/me/bucket-list` | Bucket list | USER | package summary array | IMPLEMENTED |
@@ -51,7 +53,10 @@ The ignored local environment used `https://api.starrynightsindia.in/api` and th
 
 - `POST /payments/razorpay` and payment-link management routes: correctly `SUPER_ADMIN` only. The app can open an already issued `razorpayShortUrl` and refreshs `/my-payments` afterward.
 - Admin catalog, notification, media, tour and user-management routes: not customer capabilities.
-- `GET /categories/tree`: available but not required because mobile’s Explore screen uses the actual category list and category-package association.
+- No customer-visible public category endpoint is intentionally omitted. Mobile
+  uses `GET /categories/tree` for the home category rail, category drill-down,
+  Global Explorer and World Time discovery; it retains `/categories/:code/packages`
+  for leaf package lists.
 
 ## Search contract
 
