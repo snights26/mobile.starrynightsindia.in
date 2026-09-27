@@ -61,12 +61,19 @@ the existing public Web, Android, iOS, and optional Expo client-ID variables.
 It never contains an OAuth client secret.
 
 - Web login requires `EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID`.
-- Android login requires `EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID` for
-  `com.starrynightsindia.app` and the registered signing certificate.
+- Android native Credential Manager login requires **both**
+  `EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID` (the requested ID-token audience) and
+  `EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID` (the package/signing identity for
+  `com.starrynightsindia.app`). The Android value is not substituted for the
+  Web client ID.
 - iOS login requires `EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID` for
   `com.starrynightsindia.app`.
 - Until a platform-specific ID exists, its native login control displays a
-  configuration state rather than starting an invalid OAuth request.
+  configuration state rather than starting an invalid OAuth request. Android
+  uses `react-native-nitro-google-signin` with the platform Credential Manager;
+  it does not use Expo AuthSession or Chrome Custom Tabs. Web keeps its existing
+  AuthSession implementation. iOS remains disabled pending an iOS client ID
+  and reversed URL scheme.
 
 The staging USER fixture is an API-level test fixture only. It proves neither
 Google identity issuance nor a mobile auth bypass, and no fixture token belongs
@@ -94,8 +101,8 @@ only for an isolated local/LAN Node API during development.
 1. The project is linked to `@starrynightss-team/starry-nights-mobile`. The
    EAS `preview` environment contains the public staging API value above.
    The preview profile creates an internally distributed Android APK; it does
-   not submit to Google Play. Keep Google disabled until Android/iOS client
-   IDs are registered.
+   not submit to Google Play. The Preview environment must contain the staging
+   API plus the approved public Android and Web OAuth client IDs.
 2. Run `eas build --profile preview --platform android` for subsequent Android
    preview builds. Do not use the production profile for this test.
 
@@ -112,8 +119,9 @@ only for an isolated local/LAN Node API during development.
 
 ### Authentication and customer flows
 
-- **Google native login: PENDING** until the Android client ID is configured
-  for `com.starrynightsindia.app`; do not simulate a successful login.
+- **Google native login: PENDING PHYSICAL DEVICE** on the next Preview APK.
+  Verify the Android Credential Manager account chooser opens without Chrome,
+  then validate the backend session, refresh, reload persistence, and logout.
 - With an approved server-issued staging session only, verify profile, bucket
   list, recently viewed, tours, payments, invoice, notifications and travel
   photos. The staging fixture proves API contracts only, not Google login.
@@ -123,7 +131,5 @@ only for an isolated local/LAN Node API during development.
 
 ## Remaining external configuration
 
-- Android Google OAuth client ID and signing-certificate registration.
 - iOS Google OAuth client ID, Apple Developer signing, and TestFlight setup.
-- EAS managed Android signing and the completed internal Preview APK.
-- Physical Android device/emulator and iOS device/simulator for UX verification.
+- Physical Android acceptance of the next native-Google Preview APK.

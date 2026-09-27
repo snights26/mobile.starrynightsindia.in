@@ -52,24 +52,25 @@ assertions only. It is not present in mobile application code.
 | `npm run lint` | PASS |
 | `npx expo config --type public` | PASS with the verified staging API target; no secret values are present in public config |
 | `npx expo-doctor` | INCONCLUSIVE — the Windows host did not return a usable report after two attempts; not treated as PASS |
-| Android JS export | PASS — staging-configured Android bundle exported successfully on 2026-09-26; temporary output removed |
+| Android JS export | PASS — staging-configured Android bundle exported successfully on 2026-09-27; temporary output is ignored |
 | `npm run staging:smoke` | PASS — verified health, public home/catalogue/category/package/gallery content and safe enquiry/chatbot validation against the Vercel staging API |
 | Staging smoke production-host guard | PASS — script refuses production before any request |
 | Mobile secret scan | PASS — no server/database secret or credential found |
 
 ## Blocking external steps
 
-1. Wait for the internally distributed Android Preview APK submitted to EAS on
-   2026-09-26, install it on a physical device, and complete the device
-   checklist in `MOBILE_STAGING_SETUP.md`.
-2. Create Android and iOS Google OAuth client IDs and add them to both EAS and
-   Node `GOOGLE_ALLOWED_CLIENT_IDS`; then verify real Google login separately.
-3. Configure EAS Android signing and complete the Android physical-device
-   checks before considering a production release.
+1. Build and install the next cache-cleared Android Preview APK. The existing
+   stable baseline build already launches on the physical device; the new APK
+   must prove Android Credential Manager sign-in without Chrome.
+2. Complete Google login, `/users/me`, refresh, reload persistence and logout
+   with a staging-safe Google account, then exercise authenticated staging
+   fixtures without a payment or customer email.
+3. Create an iOS Google OAuth client and complete Apple/TestFlight setup before
+   considering an iOS release.
 
 ## Decision
 
-**Safe for physical staging testing: PENDING BUILD COMPLETION.** The approved
-EAS account now links the project and has the verified staging API in the
-`preview` environment. Install only the completed internal APK; the application
-has no production database connection.
+**Safe for anonymous physical staging testing: YES.** The approved EAS account
+has the staging API and Android/Web public OAuth configuration in `preview`.
+Native Android Google acceptance is pending the next internal APK; the
+application has no production database connection.

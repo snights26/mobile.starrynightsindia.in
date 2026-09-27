@@ -24,7 +24,7 @@ Status labels: **IMPLEMENTED** means code is connected to the existing contract;
 
 ## Customer
 
-- [x] Google auth integration structure — IMPLEMENTED / LIVE GOOGLE AUTH NOT YET VERIFIED
+- [x] Google authentication — Web AuthSession flow remains unchanged; Android uses native Credential Manager through `react-native-nitro-google-signin` 2.3.0 and sends its ID token to the existing Node API — BUILD VERIFIED / PHYSICAL DEVICE AUTH PENDING
 - [x] Session restore, automatic refresh, invalid-session cleanup — IMPLEMENTED / BUILD VERIFIED; no real credential was used
 - [x] Profile and profile completion — IMPLEMENTED
 - [x] Bucket list — IMPLEMENTED
@@ -55,7 +55,7 @@ Status labels: **IMPLEMENTED** means code is connected to the existing contract;
 - [x] Chatbot invalid-request validation — LIVE API VERIFIED (HTTP 400, no interaction created)
 - [x] Auth/session safety paths — BUILD VERIFIED by implementation and Android bundle review: SecureStore only, guarded queries, a single 401/bearer-403 refresh retry, failed-refresh cleanup and logout cleanup
 - [x] Dependency audit — `npm audit --omit=dev` reports 15 moderate / 2 high upstream Expo SDK 54 ecosystem advisories. Findings and the non-disruptive upgrade path are in `MOBILE_DEPENDENCY_AUDIT.md`.
-- [ ] Android device launch — no Android SDK/`adb` device or emulator available in this environment
+- [x] Android device launch — RUNTIME VERIFIED on the physical Preview APK `fed7d928-e622-4419-a2b5-ea50720a4095`; the app remained open after a fresh installation
 - [x] iOS configuration — IMPLEMENTED; device verification pending
 - [ ] Device UX checks — cold-start UI, tabs, keyboard, Android back navigation, safe areas, sharing and image rendering require an Android device/emulator
 
@@ -68,7 +68,7 @@ Status labels: **IMPLEMENTED** means code is connected to the existing contract;
 ## Verification environment
 
 - An ignored local `.env` temporarily supplied `EXPO_PUBLIC_API_BASE_URL=https://api.starrynightsindia.in/api`; the value was checked to end in `/api` and removed after the verification run. No API URL is hardcoded in application source.
-- No live Google identity, customer session, customer photo upload, payment link, invoice, or authenticated customer data was exercised.
+- Web Google login is LIVE STAGING VERIFIED. Android native Google login, customer session, customer photo upload, payment link, invoice, and authenticated customer data remain physical-device verification work.
 - The hosted unauthenticated `/users/me` response was an empty HTTP 403 instead of the Node source's anticipated 401 envelope. The Axios interceptor now refreshes once for a 403 only when the original request carried a bearer token; it does not treat a generic unauthenticated 403 as a session refresh trigger.
 - The hosted enquiry validation result differs from the inspected Node source. Do not treat a successful enquiry submission as production-verified until the staging Node deployment/proxy returns the required HTTP 400 error envelope for an invalid payload.
 
@@ -85,8 +85,9 @@ Status labels: **IMPLEMENTED** means code is connected to the existing contract;
 - This pass: mobile `typecheck` and `lint` passed. Expo Doctor did not produce
   a completion result after two host attempts and is **HOST BLOCKED**. A later
   Android JS export completed successfully; its temporary output was removed.
-- Android and iOS Google client audiences are still required before native
-  Google authentication can be verified.
+- Android now has a registered OAuth client and a native Credential Manager
+  implementation. iOS remains intentionally disabled until it has its own
+  client ID and reversed URL scheme.
 
 ## Mobile staging-test readiness — 2026-09-26
 
@@ -99,8 +100,9 @@ Status labels: **IMPLEMENTED** means code is connected to the existing contract;
   development/preview/production environment profiles are documented.
 - [x] Public staging smoke harness added. It refuses the production host before
   requesting anything and sends only validation-failure POSTs.
-- [x] Native Google sign-in is disabled gracefully when its platform-specific
-  public client ID is absent; no test identity or auth bypass is present.
+- [x] Native Google sign-in uses Android Credential Manager when its public
+  Android and Web client IDs are present. It has no test identity or auth
+  bypass. iOS remains gracefully unavailable pending its own configuration.
 - [x] Customer-safe API error mapping covers timeout, offline, 400, 401, 403,
   404, and 5xx states. The one-refresh/one-retry guard remains in force.
 - [x] Android JS export — BUILD VERIFIED on 2026-09-26; temporary output
@@ -108,10 +110,29 @@ Status labels: **IMPLEMENTED** means code is connected to the existing contract;
 - [x] Staging target smoke — LIVE STAGING API VERIFIED on 2026-09-26:
   health, public content, package/category detail, gallery, notifications and
   safe enquiry/chatbot validation passed against the Vercel staging API.
-- [ ] Physical-device staging test — Android Preview APK is submitted through
-  the linked EAS project; completion, Android installation and device/emulator
-  access are still required. Android/iOS OAuth IDs remain required for native
-  Google-login verification only.
+- [ ] Native Google physical-device acceptance — requires the next cache-cleared
+  Preview APK. Android OAuth is configured; iOS OAuth remains pending.
+
+## Android native dependency and Google migration — 2026-09-27
+
+- The original Android startup crash was a native `NoSuchMethodError` in
+  `expo.modules.font.FontLoaderModule` caused by an incompatible nested
+  `expo-font` pulled by `@expo/vector-icons` 15.1.1. The fixed dependency graph
+  is `@expo/vector-icons` 15.0.3, `expo-font` 14.0.12, and Expo's
+  `expo-modules-core` 3.0.30. The root override keeps that font version
+  deduplicated. Preview build `fed7d928-e622-4419-a2b5-ea50720a4095` confirmed
+  stable startup on the physical device.
+- Android browser AuthSession Google login was replaced with
+  `react-native-nitro-google-signin` 2.3.0 and
+  `react-native-nitro-modules` 0.37.1. This uses Android Credential Manager
+  (`presentExplicitSignIn`) rather than Chrome Custom Tabs. It requests an ID
+  token for the configured **Web** OAuth client, while the Android OAuth client
+  continues to bind package and EAS signing SHA identity. The existing API
+  remains the sole token verifier/session issuer.
+- The library's Expo plugin is deliberately not applied yet: without Firebase
+  it requires an iOS reversed client scheme, and iOS has no approved client.
+  Android needs no `google-services.json` when `webClientId` is configured
+  explicitly; React Native autolinking supplies the Android native module.
 
 See `MOBILE_STAGING_SETUP.md` and `PRE_TESTING_READINESS.md` for the exact
 safe setup and remaining gates.
