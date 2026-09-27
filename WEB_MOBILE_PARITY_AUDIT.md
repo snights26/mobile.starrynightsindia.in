@@ -133,8 +133,9 @@ are present, not that the markup looks identical.
 
 - No customer enquiry, payment, email, photo mutation, or private document
   download was created during this audit.
-- New parity screens are JavaScript-only. They passed static checks; they need
-  the next normal preview update/build before physical-device UI acceptance.
+- New parity screens are JavaScript-only. They passed static checks; internal
+  Preview build `884c3e10-f365-40a6-ba4b-a9b5b6016087` was submitted from
+  commit `973341f` for physical-device UI acceptance.
 - Google account selection, backend audience acceptance, refresh and logout
   were manually observed by the owner on the current Preview build. Automated
   ADB verification independently confirmed the installed app process remains

@@ -166,3 +166,7 @@ safe setup and remaining gates.
   decisions (brands, long-form About/social content, customer-safe transport
   slips/private invoice downloads) without treating desktop markup as a mobile
   requirement.
+- [ ] Android parity-device acceptance — internal Preview build
+  `884c3e10-f365-40a6-ba4b-a9b5b6016087` was submitted from commit
+  `973341f` for the JavaScript-only discovery changes and is currently in
+  progress. No native dependency or Android configuration changed.
