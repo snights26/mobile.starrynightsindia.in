@@ -202,6 +202,9 @@ safe setup and remaining gates.
 - [x] `react-native-svg` 15.12.1 is the only new dependency. It is Expo SDK 54
   compatible. The fixed Vector Icons / Font / Expo Modules Core and native
   Google graph remains deduplicated and unchanged.
-- [ ] A new Android Preview binary is required because it includes both the
-  native SVG module and the new tracked launch GIF. Device acceptance is
-  pending that exact binary; no new UX/device claim is made here.
+- [ ] Corrected cache-cleared internal Android Preview
+  `4f1e126d-3bcd-4bda-9906-23fa3049c374` was submitted from source commit
+  `a067b1c` with the native SVG module, launch GIF and compact featured-category
+  fix. It is pending EAS completion and exact-APK physical-device acceptance.
+  Superseded build `66011e2d-da82-416f-be9d-f43d9da5a273` was cancelled before
+  distribution because it predated the compact category-row fix.
