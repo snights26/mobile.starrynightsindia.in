@@ -33,7 +33,9 @@ const regionColors = ["#F59E0B", "#0EA5E9", "#14B8A6", "#8B5CF6", "#EC4899", "#8
 const minZoom = 1;
 const maxZoom = 2.25;
 const zoomStep = .25;
-const dragThreshold = 6;
+type MapGesture =
+  | { kind: "tap" }
+  | { kind: "multi"; originZoom: number; originPan: Pan; midpoint: Point; distance: number };
 
 const normalise = (value?: unknown) => {
   const raw = String(value ?? "").trim().toLowerCase();
@@ -98,9 +100,9 @@ export function ExplorerMap({ mode, categories, selectedCode, onSelect }: { mode
   const [zoom, setZoom] = useState(minZoom);
   const [pan, setPan] = useState<Pan>({ x: 0, y: 0 });
   const [svgLayout, setSvgLayout] = useState({ width: 0, height: 0 });
-  const gesture = useRef<{ startX: number; startY: number; origin: Pan; dragged: boolean } | null>(null);
-  const didPan = useRef(false);
-  useEffect(() => { setZoom(minZoom); setPan({ x: 0, y: 0 }); gesture.current = null; didPan.current = false; }, [mode]);
+  const gesture = useRef<MapGesture | null>(null);
+  const multiTouchActive = useRef(false);
+  useEffect(() => { setZoom(minZoom); setPan({ x: 0, y: 0 }); gesture.current = null; multiTouchActive.current = false; }, [mode]);
   const categoryByName = useMemo(() => new Map(flattenCategories(categories).filter((item) => item.name || item.title).map((item) => [normalise(item.name || item.title), item])), [categories]);
   const map = useQuery({
     queryKey: ["explorer-map", mode, WEB_BASE_URL],
@@ -131,6 +133,12 @@ export function ExplorerMap({ mode, categories, selectedCode, onSelect }: { mode
     return next;
   });
   const pointFor = (event: GestureResponderEvent): Point => [event.nativeEvent.locationX, event.nativeEvent.locationY];
+  const touchPoints = (event: GestureResponderEvent): Point[] => {
+    const touches = event.nativeEvent.touches as unknown as { length: number; [index: number]: { locationX: number; locationY: number } };
+    return Array.from({ length: touches.length }, (_, index) => [touches[index].locationX, touches[index].locationY]);
+  };
+  const midpoint = ([first, second]: Point[]): Point => [(first[0] + second[0]) / 2, (first[1] + second[1]) / 2];
+  const touchDistance = ([first, second]: Point[]) => Math.hypot(second[0] - first[0], second[1] - first[1]);
   const screenScale = () => Math.min(svgLayout.width / boxWidth, svgLayout.height / boxHeight) || 1;
   const codeAtTouch = (event: GestureResponderEvent) => {
     const [touchX, touchY] = pointFor(event);
@@ -150,30 +158,40 @@ export function ExplorerMap({ mode, categories, selectedCode, onSelect }: { mode
     const code = resolveCode(feature, mode, categoryByName);
     return code.startsWith(config.prefix) ? code : undefined;
   };
+  const beginMultiTouch = (points: Point[]) => {
+    if (points.length < 2) return;
+    gesture.current = { kind: "multi", originZoom: zoom, originPan: pan, midpoint: midpoint(points), distance: Math.max(touchDistance(points), 1) };
+    multiTouchActive.current = true;
+  };
   const onTouchStart = (event: GestureResponderEvent) => {
-    const [startX, startY] = pointFor(event);
-    didPan.current = false;
-    gesture.current = { startX, startY, origin: pan, dragged: false };
+    const points = touchPoints(event);
+    if (points.length >= 2) beginMultiTouch(points);
+    else if (points.length === 1 && !multiTouchActive.current) gesture.current = { kind: "tap" };
   };
   const onTouchMove = (event: GestureResponderEvent) => {
+    const points = touchPoints(event);
+    if (points.length < 2) return;
+    if (gesture.current?.kind !== "multi") beginMultiTouch(points);
     const activeGesture = gesture.current;
-    if (!activeGesture || zoom <= minZoom) return;
-    const [touchX, touchY] = pointFor(event);
-    const dx = touchX - activeGesture.startX;
-    const dy = touchY - activeGesture.startY;
-    if (!activeGesture.dragged && Math.hypot(dx, dy) < dragThreshold) return;
-    activeGesture.dragged = true;
-    didPan.current = true;
+    if (!activeGesture || activeGesture.kind !== "multi") return;
+    const nextZoom = Math.min(maxZoom, Math.max(minZoom, activeGesture.originZoom * (touchDistance(points) / activeGesture.distance)));
+    const nextMidpoint = midpoint(points);
     const scale = screenScale();
-    setPan(clampPan({ x: activeGesture.origin.x + dx / scale, y: activeGesture.origin.y + dy / scale }, zoom));
+    setZoom(nextZoom);
+    setPan(clampPan({ x: activeGesture.originPan.x + (nextMidpoint[0] - activeGesture.midpoint[0]) / scale, y: activeGesture.originPan.y + (nextMidpoint[1] - activeGesture.midpoint[1]) / scale }, nextZoom));
   };
   const onTouchEnd = (event: GestureResponderEvent) => {
     const activeGesture = gesture.current;
-    gesture.current = null;
-    if (activeGesture?.dragged || didPan.current) {
-      setTimeout(() => { didPan.current = false; }, 80);
+    const remainingTouches = touchPoints(event);
+    const usedMultiTouch = multiTouchActive.current || activeGesture?.kind === "multi";
+    if (usedMultiTouch) {
+      if (!remainingTouches.length) {
+        gesture.current = null;
+        multiTouchActive.current = false;
+      }
       return;
     }
+    gesture.current = null;
     const code = codeAtTouch(event);
     if (code) onSelect(code);
   };
