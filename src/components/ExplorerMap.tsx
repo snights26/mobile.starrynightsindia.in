@@ -53,6 +53,18 @@ const polygons = (feature: GeoFeature): Point[][][] => {
 const rings = (feature: GeoFeature) => polygons(feature).flat();
 const validRing = (ring: Point[]) => ring.length > 3 && ring.every((point) => Array.isArray(point) && Number.isFinite(point[0]) && Number.isFinite(point[1]));
 
+function containsPoint(ring: Point[], point: Point) {
+  let inside = false;
+  for (let current = 0, previous = ring.length - 1; current < ring.length; previous = current++) {
+    const [x, y] = ring[current];
+    const [previousX, previousY] = ring[previous];
+    const intersects = (y > point[1]) !== (previousY > point[1])
+      && point[0] < ((previousX - x) * (point[1] - y)) / (previousY - y) + x;
+    if (intersects) inside = !inside;
+  }
+  return inside;
+}
+
 function projection(geo: GeoCollection, viewBox: string) {
   const [boxX, boxY, boxWidth, boxHeight] = viewBox.split(/\s+/).map(Number);
   const points = (geo.features ?? []).flatMap((feature) => rings(feature).flat()).filter((point): point is Point => Array.isArray(point) && Number.isFinite(point[0]) && Number.isFinite(point[1]));
@@ -118,29 +130,52 @@ export function ExplorerMap({ mode, categories, selectedCode, onSelect }: { mode
     setPan((previous) => clampPan(previous, next));
     return next;
   });
-  const pointFor = (event: GestureResponderEvent) => ({ x: event.nativeEvent.locationX, y: event.nativeEvent.locationY });
+  const pointFor = (event: GestureResponderEvent): Point => [event.nativeEvent.locationX, event.nativeEvent.locationY];
   const screenScale = () => Math.min(svgLayout.width / boxWidth, svgLayout.height / boxHeight) || 1;
+  const codeAtTouch = (event: GestureResponderEvent) => {
+    const [touchX, touchY] = pointFor(event);
+    const scale = screenScale();
+    const insetX = (svgLayout.width - boxWidth * scale) / 2;
+    const insetY = (svgLayout.height - boxHeight * scale) / 2;
+    const transformed: Point = [(touchX - insetX) / scale, (touchY - insetY) / scale];
+    const point: Point = [
+      centerX + (transformed[0] - pan.x - centerX) / zoom,
+      centerY + (transformed[1] - pan.y - centerY) / zoom,
+    ];
+    const feature = (map.data?.features ?? []).find((item) => polygons(item).some((polygon) => {
+      const [outline, ...holes] = polygon;
+      return validRing(outline) && containsPoint(outline, point) && !holes.some((hole) => validRing(hole) && containsPoint(hole, point));
+    }));
+    if (!feature) return undefined;
+    const code = resolveCode(feature, mode, categoryByName);
+    return code.startsWith(config.prefix) ? code : undefined;
+  };
   const onTouchStart = (event: GestureResponderEvent) => {
-    if (zoom <= minZoom) return;
-    const point = pointFor(event);
+    const [startX, startY] = pointFor(event);
     didPan.current = false;
-    gesture.current = { startX: point.x, startY: point.y, origin: pan, dragged: false };
+    gesture.current = { startX, startY, origin: pan, dragged: false };
   };
   const onTouchMove = (event: GestureResponderEvent) => {
     const activeGesture = gesture.current;
     if (!activeGesture || zoom <= minZoom) return;
-    const point = pointFor(event);
-    const dx = point.x - activeGesture.startX;
-    const dy = point.y - activeGesture.startY;
+    const [touchX, touchY] = pointFor(event);
+    const dx = touchX - activeGesture.startX;
+    const dy = touchY - activeGesture.startY;
     if (!activeGesture.dragged && Math.hypot(dx, dy) < dragThreshold) return;
     activeGesture.dragged = true;
     didPan.current = true;
     const scale = screenScale();
     setPan(clampPan({ x: activeGesture.origin.x + dx / scale, y: activeGesture.origin.y + dy / scale }, zoom));
   };
-  const onTouchEnd = () => {
+  const onTouchEnd = (event: GestureResponderEvent) => {
+    const activeGesture = gesture.current;
     gesture.current = null;
-    if (didPan.current) setTimeout(() => { didPan.current = false; }, 80);
+    if (activeGesture?.dragged || didPan.current) {
+      setTimeout(() => { didPan.current = false; }, 80);
+      return;
+    }
+    const code = codeAtTouch(event);
+    if (code) onSelect(code);
   };
   const onLayout = (event: LayoutChangeEvent) => setSvgLayout(event.nativeEvent.layout);
 
@@ -157,9 +192,8 @@ export function ExplorerMap({ mode, categories, selectedCode, onSelect }: { mode
         const selected = selectable && code === selectedCode;
         const label = String(featureName(feature) || code || "Map region");
         const path = pathFor(feature, project);
-        const select = () => { if (selectable && !didPan.current) onSelect(code!); };
-        return <G key={`${label}-${index}`} accessible={selectable} accessibilityRole={selectable ? "button" : undefined} accessibilityLabel={selectable ? `Show packages for ${label}` : label} onPress={select}>
-          <Path d={path} fill={selected ? theme.colors.accent : selectable ? regionColors[index % regionColors.length] : "rgba(100,116,139,0.32)"} stroke={selected ? theme.colors.accentStrong : "rgba(15,23,42,0.42)"} strokeWidth={selected ? 1.6 : 0.35} opacity={selectable || selected ? 1 : 0.55} pointerEvents={selectable ? "auto" : "none"} onPress={selectable ? select : undefined} />
+        return <G key={`${label}-${index}`}>
+          <Path d={path} fill={selected ? theme.colors.accent : selectable ? regionColors[index % regionColors.length] : "rgba(100,116,139,0.32)"} stroke={selected ? theme.colors.accentStrong : "rgba(15,23,42,0.42)"} strokeWidth={selected ? 1.6 : 0.35} opacity={selectable || selected ? 1 : 0.55} pointerEvents="none" />
         </G>;
       })}
       </G>
