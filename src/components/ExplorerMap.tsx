@@ -159,8 +159,7 @@ export function ExplorerMap({ mode, categories, selectedCode, onSelect }: { mode
         const path = pathFor(feature, project);
         const select = () => { if (selectable && !didPan.current) onSelect(code!); };
         return <G key={`${label}-${index}`} accessible={selectable} accessibilityRole={selectable ? "button" : undefined} accessibilityLabel={selectable ? `Show packages for ${label}` : label} onPress={select}>
-          <Path d={path} fill={selected ? theme.colors.accent : selectable ? regionColors[index % regionColors.length] : "rgba(100,116,139,0.32)"} stroke={selected ? theme.colors.accentStrong : "rgba(15,23,42,0.42)"} strokeWidth={selected ? 1.6 : 0.35} opacity={selectable || selected ? 1 : 0.55} pointerEvents="none" />
-          {selectable ? <Path d={path} fill="rgba(0,0,0,0.01)" stroke="rgba(0,0,0,0.01)" strokeWidth={8} onPress={select} /> : null}
+          <Path d={path} fill={selected ? theme.colors.accent : selectable ? regionColors[index % regionColors.length] : "rgba(100,116,139,0.32)"} stroke={selected ? theme.colors.accentStrong : "rgba(15,23,42,0.42)"} strokeWidth={selected ? 1.6 : 0.35} opacity={selectable || selected ? 1 : 0.55} pointerEvents={selectable ? "auto" : "none"} onPress={selectable ? select : undefined} />
         </G>;
       })}
       </G>
