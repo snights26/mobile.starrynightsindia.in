@@ -143,7 +143,7 @@ export function ExplorerMap({ mode, categories, selectedCode, onSelect }: { mode
       centerY + (transformed[1] - pan.y - centerY) / zoom,
     ];
     const feature = (map.data?.features ?? []).find((item) => polygons(item).some((polygon) => {
-      const [outline, ...holes] = polygon;
+      const [outline, ...holes] = polygon.map((ring) => ring.map(project));
       return validRing(outline) && containsPoint(outline, point) && !holes.some((hole) => validRing(hole) && containsPoint(hole, point));
     }));
     if (!feature) return undefined;
