@@ -35,6 +35,12 @@
           "backgroundColor": "#F8FAFC",
           "dark": {
             "backgroundColor": "#000000"
+          },
+          "android": {
+            "drawable": {
+              "icon": "./assets/splash/transparent.xml",
+              "darkIcon": "./assets/splash/transparent.xml"
+            }
           }
         }
       ],
