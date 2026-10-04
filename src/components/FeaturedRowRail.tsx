@@ -8,14 +8,17 @@ import type { Category, FeaturedRow, PackageSummary } from "@/src/types/api";
 
 export const featuredRowTitle = (row: FeaturedRow) => row.rowTitle || row.title || "Discover";
 export const featuredRowsForPlacement = (rows: FeaturedRow[], placement: string) => rows
-  .filter((row) => String(row.visibleOn ?? placement).trim().toLowerCase() === placement)
+  .filter((row) => {
+    const visibleOn = String(row.visibleOn ?? placement).trim().toLowerCase();
+    return visibleOn === placement || visibleOn === "both";
+  })
   .sort((left, right) => (left.sequence ?? Number.MAX_SAFE_INTEGER) - (right.sequence ?? Number.MAX_SAFE_INTEGER));
 
-export type FeaturedRowBehavior = "package" | "category" | "trending";
+export type FeaturedRowBehavior = "package" | "category" | "top10";
 export const featuredRowBehavior = (row: FeaturedRow): FeaturedRowBehavior => {
   const type = String(row.rowType || row.type).trim().toLowerCase();
   if (type === "category") return "category";
-  if (type === "top10" || type === "trending") return "trending";
+  if (type === "top10") return "top10";
   return "package";
 };
 
@@ -31,7 +34,9 @@ export function FeaturedRowRail({ row, placement }: { row: FeaturedRow; placemen
   const packages = row.items.filter((item): item is PackageSummary => isPackage(item));
   if (categoryRow && !categories.length) return null;
   if (!categoryRow && !packages.length) return null;
-  const sourcePlacement = String(row.visibleOn || placement).toLowerCase();
+  // A `both` row is retrieved from the current screen's endpoint. Keeping the page
+  // placement here lets View All re-fetch that exact independently-rendered row.
+  const sourcePlacement = placement;
   const openAll = () => {
     const params = { rowId: row.rowId || row.id, placement: sourcePlacement, title: featuredRowTitle(row), behavior };
     router.push((categoryRow

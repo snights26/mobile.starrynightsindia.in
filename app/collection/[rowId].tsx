@@ -17,7 +17,10 @@ export default function CollectionScreen() {
   const query = useQuery({ queryKey: ["collection", activePlacement, rowId], queryFn: () => catalogApi.featured(activePlacement), enabled: Boolean(rowId) });
   if (query.isLoading) return <Screen><LoadingView label={`Loading ${title || "collection"}…`} /></Screen>;
   if (query.isError) return <Screen><ErrorView retry={() => query.refetch()} message="This collection is unavailable right now." /></Screen>;
-  const row = (query.data ?? []).find((item: FeaturedRow) => (item.rowId || item.id) === rowId && String(item.visibleOn || activePlacement).toLowerCase() === activePlacement);
+  const row = (query.data ?? []).find((item: FeaturedRow) => {
+    const visibleOn = String(item.visibleOn || activePlacement).toLowerCase();
+    return (item.rowId || item.id) === rowId && (visibleOn === activePlacement || visibleOn === "both");
+  });
   const packages = row && featuredRowBehavior(row as FeaturedRow) !== "category" ? row.items.filter(isPackage) : [];
   return <Screen scroll={false}><FlatList data={packages} numColumns={2} keyExtractor={(item) => item.packageCode || item.code} columnWrapperStyle={styles.row} contentContainerStyle={styles.list} renderItem={({ item }) => <PackageCard item={item} compact />} ListEmptyComponent={<EmptyView title="No journeys in this collection" message="The live collection may have changed. Please return and choose another row." />} /></Screen>;
 }

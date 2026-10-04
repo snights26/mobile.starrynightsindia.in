@@ -1,6 +1,7 @@
 import { Animated, Image, Modal, Pressable, ScrollView, StyleSheet, Text, useWindowDimensions, View } from "react-native";
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
+import { StatusBar } from "expo-status-bar";
 import { router, usePathname } from "expo-router";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { useAuth } from "@/src/auth/AuthProvider";
@@ -65,6 +66,7 @@ export function MobileHeader() {
   const isProfile = pathname === "/profile";
 
   return <>
+    <StatusBar style="light" backgroundColor="#0B0F19" />
     <View style={[styles.header, { backgroundColor: "#0B0F19", borderBottomColor: "#1F2937", paddingTop: insets.top }]}>
       <View style={styles.topRow}>
         <Pressable onPress={() => setMenuVisible(true)} accessibilityRole="button" accessibilityLabel="Open navigation menu" style={[styles.iconButton, styles.headerIconButton]}>

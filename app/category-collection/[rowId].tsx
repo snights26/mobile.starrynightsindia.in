@@ -17,7 +17,10 @@ export default function CategoryCollectionScreen() {
   const query = useQuery({ queryKey: ["category-collection", activePlacement, rowId], queryFn: () => catalogApi.featured(activePlacement), enabled: Boolean(rowId) });
   if (query.isLoading) return <Screen><LoadingView label={`Loading ${title || "categories"}…`} /></Screen>;
   if (query.isError) return <Screen><ErrorView retry={() => query.refetch()} message="This category collection is unavailable right now." /></Screen>;
-  const row = (query.data ?? []).find((item: FeaturedRow) => (item.rowId || item.id) === rowId && String(item.visibleOn || activePlacement).toLowerCase() === activePlacement);
+  const row = (query.data ?? []).find((item: FeaturedRow) => {
+    const visibleOn = String(item.visibleOn || activePlacement).toLowerCase();
+    return (item.rowId || item.id) === rowId && (visibleOn === activePlacement || visibleOn === "both");
+  });
   const categories = (row?.items ?? []).filter((item): item is Category => !Boolean((item as { packageCode?: string }).packageCode));
   return <Screen scroll={false}><FlatList data={categories} numColumns={2} keyExtractor={categoryCode} contentContainerStyle={styles.list} columnWrapperStyle={styles.row} renderItem={({ item }) => <CategoryTile item={item} />} ListEmptyComponent={<EmptyView title="No categories in this collection" message="The live collection may have changed. Please return and choose another row." />} /></Screen>;
 }
