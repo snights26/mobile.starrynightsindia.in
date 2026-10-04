@@ -3,12 +3,13 @@ import { StatusBar } from "expo-status-bar";
 import { AppProviders } from "@/src/providers/AppProviders";
 import { LaunchScreen } from "@/src/components/LaunchScreen";
 import { useAuth } from "@/src/auth/AuthProvider";
-import { useAppTheme } from "@/src/theme/theme";
+import { useAppTheme, useThemePreference } from "@/src/theme/theme";
 
 function RootNavigator() {
   const { isLoading } = useAuth();
   const theme = useAppTheme();
-  if (isLoading) return <><StatusBar style={theme.dark ? "light" : "dark"} backgroundColor={theme.colors.background} /><LaunchScreen /></>;
+  const { isReady: themeReady } = useThemePreference();
+  if (isLoading || !themeReady) return <><StatusBar style={theme.dark ? "light" : "dark"} backgroundColor={theme.colors.background} /><LaunchScreen /></>;
   return <><StatusBar style={theme.dark ? "light" : "dark"} backgroundColor={theme.colors.surface} /><Stack screenOptions={{ headerBackTitle: "Back", headerShadowVisible: false, headerTitleStyle: { fontWeight: "700", color: theme.colors.text }, headerStyle: { backgroundColor: theme.colors.surface }, headerTintColor: theme.colors.text, contentStyle: { backgroundColor: theme.colors.background } }}>
     <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
     <Stack.Screen name="package/[code]" options={{ title: "Package details" }} />

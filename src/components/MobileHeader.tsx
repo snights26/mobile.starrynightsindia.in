@@ -75,6 +75,8 @@ export function MobileHeader() {
         <Image source={headerBrandImage} resizeMode="contain" style={[styles.brandImage, { width: headerBrandWidth }]} accessibilityLabel="Starry Nights brand" />
         {isProfile ? <Pressable onPress={() => router.push("/account" as never)} accessibilityRole="button" accessibilityLabel="Open Your Account" hitSlop={8} style={[styles.iconButton, styles.headerIconButton]}><Ionicons name="settings-outline" size={21} color="#fff" /></Pressable> : <View style={styles.headerBalance} />}
       </View>
+    </View>
+    <View style={[styles.searchSurface, { backgroundColor: theme.colors.background, borderBottomColor: theme.colors.border }]}>
       <Pressable onPress={() => router.push("/search")} accessibilityRole="button" accessibilityLabel="Search packages" style={[styles.search, { backgroundColor: theme.colors.surface, borderColor: theme.colors.border }]}>
         <Ionicons name="search" size={19} color={theme.colors.text} />
         <Text numberOfLines={1} style={[styles.searchLabel, { color: theme.colors.muted }]}>Search destinations and journeys</Text>
@@ -124,12 +126,13 @@ function DrawerGroup({ label, children }: { label: string; children: ReactNode }
 }
 
 const styles = StyleSheet.create({
-  header: { borderBottomWidth: StyleSheet.hairlineWidth, paddingHorizontal: spacing.md, paddingBottom: spacing.sm, gap: spacing.sm },
+  header: { borderBottomWidth: StyleSheet.hairlineWidth, paddingHorizontal: spacing.md, paddingBottom: spacing.sm },
   topRow: { minHeight: 56, flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: spacing.sm },
   brandImage: { height: 48, aspectRatio: 1200 / 284, maxWidth: "58%" },
   iconButton: { width: 42, height: 42, borderRadius: 21, alignItems: "center", justifyContent: "center" },
   headerIconButton: { backgroundColor: "#1F2937" },
   headerBalance: { width: 42, height: 42 },
+  searchSurface: { borderBottomWidth: StyleSheet.hairlineWidth, paddingHorizontal: spacing.md, paddingVertical: spacing.sm },
   search: { minHeight: 42, borderRadius: radius.pill, borderWidth: 1, paddingHorizontal: spacing.md, gap: spacing.xs, flexDirection: "row", alignItems: "center" },
   searchLabel: { fontSize: 14, flex: 1 },
   modalRoot: { flex: 1, flexDirection: "row" },

@@ -8,7 +8,7 @@ import { flattenCategories } from "@/src/constants/discovery";
 import { PackageCard } from "@/src/components/PackageCard";
 import { Screen } from "@/src/components/Screen";
 import { EmptyView, ErrorView, LoadingView } from "@/src/components/StateViews";
-import { radius, spacing, useAppTheme } from "@/src/theme/theme";
+import { radius, shadows, spacing, useAppTheme } from "@/src/theme/theme";
 import type { Category } from "@/src/types/api";
 
 type ExplorerMode = ExplorerMapMode;
@@ -76,13 +76,13 @@ export default function GlobalExplorerScreen() {
       contentContainerStyle={styles.list}
       renderItem={({ item }) => <PackageCard item={item} compact />}
       ListHeaderComponent={<View style={styles.header}>
-        <View style={[styles.hero, { backgroundColor: theme.colors.nav }]}>
-          <Ionicons name="map-outline" color="#fff" size={25} />
-          <Text style={[styles.eyebrow, { color: "#FCA5A5" }]}>CURATED TRAVEL ATLAS</Text>
-          <Text style={styles.heroTitle}>Starry Nights Global Explorer</Text>
-          <Text style={styles.heroCopy}>Navigate India and the world by region, then open a refined collection of journeys for the place you choose.</Text>
+        <View style={[styles.hero, { backgroundColor: theme.colors.card, borderColor: theme.colors.border }, shadows.card]}>
+          <Ionicons name="map-outline" color={theme.colors.accent} size={25} />
+          <Text style={[styles.eyebrow, { color: theme.colors.accent }]}>CURATED TRAVEL ATLAS</Text>
+          <Text style={[styles.heroTitle, { color: theme.colors.text }]}>Starry Nights Global Explorer</Text>
+          <Text style={[styles.heroCopy, { color: theme.colors.muted }]}>Navigate India and the world by region, then open a refined collection of journeys for the place you choose.</Text>
         </View>
-        <View style={[styles.switcher, { backgroundColor: theme.colors.soft }]}>
+        <View style={[styles.switcher, { backgroundColor: theme.colors.soft, borderColor: theme.colors.border }]}>
           {(["domestic", "international"] as ExplorerMode[]).map((item) => <Pressable
             key={item}
             onPress={() => setMode(item)}
@@ -112,7 +112,7 @@ export default function GlobalExplorerScreen() {
             ><Text numberOfLines={1} style={{ color: selectedRegion ? theme.colors.accentStrong : theme.colors.text, fontWeight: "700" }}>{nameFor(item)}</Text></Pressable>;
           }}
         />
-        <View style={styles.resultHeading}>
+        <View style={[styles.resultHeading, { backgroundColor: theme.colors.card, borderColor: theme.colors.border }]}>
           <View><Text style={[styles.sectionEyebrow, { color: theme.colors.accent }]}>{mode.toUpperCase()}</Text><Text style={[styles.resultsTitle, { color: theme.colors.text }]}>{nameFor(selected)}</Text></View>
           {packages.isFetching ? <Text style={{ color: theme.colors.muted }}>Loading…</Text> : null}
         </View>
@@ -127,16 +127,16 @@ const styles = StyleSheet.create({
   list: { padding: spacing.md, gap: spacing.sm, paddingBottom: 100 },
   row: { gap: spacing.sm },
   header: { gap: spacing.sm, paddingBottom: spacing.sm },
-  hero: { borderRadius: radius.lg, padding: spacing.lg, gap: spacing.xs },
+  hero: { borderRadius: radius.lg, padding: spacing.lg, gap: spacing.xs, borderWidth: 1 },
   eyebrow: { fontSize: 12, letterSpacing: 1, fontWeight: "900" },
-  heroTitle: { color: "#fff", fontSize: 25, fontWeight: "800" },
-  heroCopy: { color: "#E2E8F0", lineHeight: 20 },
-  switcher: { padding: 4, borderRadius: radius.pill, flexDirection: "row" },
+  heroTitle: { fontSize: 25, fontWeight: "800" },
+  heroCopy: { lineHeight: 20 },
+  switcher: { padding: 4, borderRadius: radius.pill, flexDirection: "row", borderWidth: 1 },
   switch: { flex: 1, minHeight: 42, borderRadius: radius.pill, alignItems: "center", justifyContent: "center" },
   sectionEyebrow: { fontSize: 12, fontWeight: "900", letterSpacing: 0.9 },
   title: { fontSize: 23, fontWeight: "800" },
   regions: { gap: spacing.xs, paddingRight: spacing.md, paddingVertical: spacing.xs },
   regionChip: { maxWidth: 180, minHeight: 42, justifyContent: "center", paddingHorizontal: spacing.md, borderWidth: 1, borderRadius: radius.pill },
-  resultHeading: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", gap: spacing.sm, marginTop: spacing.xs },
+  resultHeading: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", gap: spacing.sm, marginTop: spacing.xs, borderWidth: 1, borderRadius: radius.md, padding: spacing.md },
   resultsTitle: { fontSize: 20, fontWeight: "800" },
 });

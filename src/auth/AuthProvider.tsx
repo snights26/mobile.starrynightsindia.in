@@ -119,7 +119,15 @@ export function AuthProvider({ children }: PropsWithChildren) {
       if (!stored) { setIsLoading(false); return; }
       if (stored.refreshExpiry <= Date.now()) { await endSession(true); setIsLoading(false); return; }
       if (stored.accessExpiry <= Date.now()) { await refreshSession(); }
-      else { setUser(stored.user); await reloadUser(); stopTimer(); refreshTimer.current = setTimeout(() => { void refreshSession(); }, Math.max(0, stored.accessExpiry - Date.now() - refreshLeadMs)); }
+      else {
+        // A valid persisted session is enough to draw the app shell. Refresh the
+        // profile in the background so a slow public-read request never leaves
+        // startup looking stalled behind the native splash.
+        setUser(stored.user);
+        void reloadUser();
+        stopTimer();
+        refreshTimer.current = setTimeout(() => { void refreshSession(); }, Math.max(0, stored.accessExpiry - Date.now() - refreshLeadMs));
+      }
       setIsLoading(false);
     })();
     return stopTimer;
