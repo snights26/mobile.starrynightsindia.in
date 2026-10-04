@@ -52,12 +52,14 @@ export function MobileHeader() {
     Animated.timing(drawerProgress, { toValue: 1, duration: 220, useNativeDriver: true }).start();
   }, [drawerProgress, menuVisible]);
 
-  const closeDrawer = () => {
+  const closeDrawer = (afterClose?: () => void) => {
     Animated.timing(drawerProgress, { toValue: 0, duration: 180, useNativeDriver: true }).start(({ finished }) => {
-      if (finished) setMenuVisible(false);
+      if (!finished) return;
+      setMenuVisible(false);
+      afterClose?.();
     });
   };
-  const navigate = (route: string) => { closeDrawer(); router.push(route as never); };
+  const navigate = (route: string) => closeDrawer(() => router.push(route as never));
   const toggleSection = (section: DrawerSection) => setOpenSection((current) => current === section ? null : section);
   const drawerTranslateX = drawerProgress.interpolate({ inputRange: [0, 1], outputRange: [-420, 0] });
   const headerBrandWidth = Math.min(210, Math.max(142, width * 0.48));
@@ -76,13 +78,13 @@ export function MobileHeader() {
         <Text numberOfLines={1} style={[styles.searchLabel, { color: theme.colors.muted }]}>Search destinations and journeys</Text>
       </Pressable>
     </View>
-    <Modal visible={menuVisible} transparent animationType="none" onRequestClose={closeDrawer} statusBarTranslucent>
+    <Modal visible={menuVisible} transparent animationType="none" onRequestClose={() => closeDrawer()} statusBarTranslucent>
       <View style={styles.modalRoot}>
         <Animated.View style={[styles.drawerShell, { transform: [{ translateX: drawerTranslateX }] }]}>
           <SafeAreaView edges={["top", "bottom"]} style={[styles.drawer, { backgroundColor: theme.colors.surface }]}>
             <View style={styles.drawerHeading}>
               <View style={styles.drawerHeadingCopy}><Image source={drawerBrandImage} resizeMode="contain" style={styles.drawerBrandImage} accessibilityLabel="Starry Nights brand" /><Text numberOfLines={1} style={{ color: theme.colors.muted }}>{isAuthenticated ? `Welcome, ${user?.name || "traveller"}` : "Start exploring"}</Text></View>
-              <Pressable onPress={closeDrawer} accessibilityRole="button" accessibilityLabel="Close navigation menu" style={[styles.iconButton, { backgroundColor: theme.colors.soft }]}><Ionicons name="close" size={22} color={theme.colors.text} /></Pressable>
+              <Pressable onPress={() => closeDrawer()} accessibilityRole="button" accessibilityLabel="Close navigation menu" style={[styles.iconButton, { backgroundColor: theme.colors.soft }]}><Ionicons name="close" size={22} color={theme.colors.text} /></Pressable>
             </View>
             <ScrollView contentContainerStyle={styles.drawerContent} showsVerticalScrollIndicator={false}>
               <DrawerAccordion label="Your Account" open={openSection === "account"} onPress={() => toggleSection("account")}>
@@ -103,7 +105,7 @@ export function MobileHeader() {
             </ScrollView>
           </SafeAreaView>
         </Animated.View>
-        <Pressable accessibilityRole="button" accessibilityLabel="Close navigation menu" style={styles.backdrop} onPress={closeDrawer} />
+        <Pressable accessibilityRole="button" accessibilityLabel="Close navigation menu" style={styles.backdrop} onPress={() => closeDrawer()} />
       </View>
     </Modal>
   </>;
