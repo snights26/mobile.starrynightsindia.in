@@ -21,6 +21,7 @@ function RootNavigator() {
     <Stack.Screen name="search" options={{ title: "Search packages" }} />
     <Stack.Screen name="login" options={{ title: "Sign in", presentation: "modal" }} />
     <Stack.Screen name="profile-edit" options={{ title: "Your profile" }} />
+    <Stack.Screen name="account" options={{ title: "Your Account" }} />
     <Stack.Screen name="enquiry" options={{ title: "Plan your trip" }} />
     <Stack.Screen name="payments" options={{ title: "Payments" }} />
     <Stack.Screen name="trip/[tourId]" options={{ title: "Trip details" }} />

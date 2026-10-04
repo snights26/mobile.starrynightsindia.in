@@ -32,12 +32,8 @@
       [
         "expo-splash-screen",
         {
-          "image": "./assets/launch/launcher.png",
-          "imageWidth": 260,
-          "resizeMode": "contain",
           "backgroundColor": "#F8FAFC",
           "dark": {
-            "image": "./assets/launch/launcher.png",
             "backgroundColor": "#000000"
           }
         }
