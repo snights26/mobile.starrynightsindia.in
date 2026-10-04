@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { memo, useEffect, useMemo, useRef, useState } from "react";
 import { ActivityIndicator, type GestureResponderEvent, type LayoutChangeEvent, Pressable, StyleSheet, Text, View } from "react-native";
 import { useQuery } from "@tanstack/react-query";
 import { Ionicons } from "@expo/vector-icons";
@@ -13,6 +13,7 @@ type Point = [number, number];
 type Pan = { x: number; y: number };
 type GeoFeature = { properties?: Record<string, unknown>; geometry?: { type?: string; coordinates?: unknown } };
 type GeoCollection = { features?: GeoFeature[] };
+type MapShape = { key: string; code: string; label: string; path: string; selectable: boolean; colorIndex: number };
 
 const maps: Record<ExplorerMapMode, { assetPath: string; viewBox: string; background: string; prefix: string }> = {
   domestic: { assetPath: "/maps/india-states.geojson", viewBox: "0 0 202 258", background: "#F8FAFC", prefix: "DOM-" },
@@ -94,15 +95,34 @@ function resolveCode(feature: GeoFeature, mode: ExplorerMapMode, categoriesByNam
   return internationalCodes[name] || `INT-${slug(name)}`;
 }
 
+const MapShapes = memo(function MapShapes({ shapes, selectedCode, accent, accentStrong }: { shapes: MapShape[]; selectedCode?: string; accent: string; accentStrong: string }) {
+  return <>{shapes.map((shape) => {
+    const selected = shape.selectable && shape.code === selectedCode;
+    return <Path key={shape.key} d={shape.path} fill={selected ? accent : shape.selectable ? regionColors[shape.colorIndex % regionColors.length] : "rgba(100,116,139,0.32)"} stroke={selected ? accentStrong : "rgba(15,23,42,0.42)"} strokeWidth={selected ? 1.6 : 0.35} opacity={shape.selectable || selected ? 1 : 0.55} pointerEvents="none" />;
+  })}</>;
+});
+
 export function ExplorerMap({ mode, categories, selectedCode, onSelect }: { mode: ExplorerMapMode; categories: Category[]; selectedCode?: string; onSelect: (code: string) => void }) {
   const theme = useAppTheme();
   const config = maps[mode];
-  const [zoom, setZoom] = useState(minZoom);
-  const [pan, setPan] = useState<Pan>({ x: 0, y: 0 });
+  const [transform, setTransform] = useState({ zoom: minZoom, pan: { x: 0, y: 0 } });
   const [svgLayout, setSvgLayout] = useState({ width: 0, height: 0 });
   const gesture = useRef<MapGesture | null>(null);
   const multiTouchActive = useRef(false);
-  useEffect(() => { setZoom(minZoom); setPan({ x: 0, y: 0 }); gesture.current = null; multiTouchActive.current = false; }, [mode]);
+  const transformRef = useRef(transform);
+  const transformFrame = useRef<number | null>(null);
+  const zoom = transform.zoom;
+  const pan = transform.pan;
+  const scheduleTransform = (next: { zoom: number; pan: Pan }) => {
+    transformRef.current = next;
+    if (transformFrame.current !== null) return;
+    transformFrame.current = requestAnimationFrame(() => {
+      transformFrame.current = null;
+      setTransform(transformRef.current);
+    });
+  };
+  useEffect(() => () => { if (transformFrame.current !== null) cancelAnimationFrame(transformFrame.current); }, []);
+  useEffect(() => { scheduleTransform({ zoom: minZoom, pan: { x: 0, y: 0 } }); gesture.current = null; multiTouchActive.current = false; }, [mode]);
   const categoryByName = useMemo(() => new Map(flattenCategories(categories).filter((item) => item.name || item.title).map((item) => [normalise(item.name || item.title), item])), [categories]);
   const map = useQuery({
     queryKey: ["explorer-map", mode, WEB_BASE_URL],
@@ -117,6 +137,11 @@ export function ExplorerMap({ mode, categories, selectedCode, onSelect }: { mode
     staleTime: Infinity,
   });
   const project = useMemo(() => projection(map.data ?? { features: [] }, config.viewBox), [config.viewBox, map.data]);
+  const shapes = useMemo<MapShape[]>(() => (map.data?.features ?? []).map((feature, index) => {
+    const code = resolveCode(feature, mode, categoryByName);
+    const label = String(featureName(feature) || code || "Map region");
+    return { key: `${label}-${index}`, code, label, path: pathFor(feature, project), selectable: Boolean(code && code.startsWith(config.prefix)), colorIndex: index };
+  }), [categoryByName, config.prefix, map.data, mode, project]);
   const [boxX, boxY, boxWidth, boxHeight] = config.viewBox.split(/\s+/).map(Number);
   const centerX = boxX + boxWidth / 2;
   const centerY = boxY + boxHeight / 2;
@@ -127,11 +152,11 @@ export function ExplorerMap({ mode, categories, selectedCode, onSelect }: { mode
     return { x: Math.min(limits.x, Math.max(-limits.x, value.x)), y: Math.min(limits.y, Math.max(-limits.y, value.y)) };
   };
   const zoomTransform = `translate(${pan.x} ${pan.y}) translate(${centerX} ${centerY}) scale(${zoom}) translate(${-centerX} ${-centerY})`;
-  const updateZoom = (direction: 1 | -1) => setZoom((current) => {
-    const next = Math.min(maxZoom, Math.max(minZoom, Number((current + direction * zoomStep).toFixed(2))));
-    setPan((previous) => clampPan(previous, next));
-    return next;
-  });
+  const updateZoom = (direction: 1 | -1) => {
+    const current = transformRef.current;
+    const nextZoom = Math.min(maxZoom, Math.max(minZoom, Number((current.zoom + direction * zoomStep).toFixed(2))));
+    scheduleTransform({ zoom: nextZoom, pan: clampPan(current.pan, nextZoom) });
+  };
   const pointFor = (event: GestureResponderEvent): Point => [event.nativeEvent.locationX, event.nativeEvent.locationY];
   const touchPoints = (event: GestureResponderEvent): Point[] => {
     const touches = event.nativeEvent.touches as unknown as { length: number; [index: number]: { locationX: number; locationY: number } };
@@ -147,8 +172,8 @@ export function ExplorerMap({ mode, categories, selectedCode, onSelect }: { mode
     const insetY = (svgLayout.height - boxHeight * scale) / 2;
     const transformed: Point = [(touchX - insetX) / scale, (touchY - insetY) / scale];
     const point: Point = [
-      centerX + (transformed[0] - pan.x - centerX) / zoom,
-      centerY + (transformed[1] - pan.y - centerY) / zoom,
+      centerX + (transformed[0] - transformRef.current.pan.x - centerX) / transformRef.current.zoom,
+      centerY + (transformed[1] - transformRef.current.pan.y - centerY) / transformRef.current.zoom,
     ];
     const feature = (map.data?.features ?? []).find((item) => polygons(item).some((polygon) => {
       const [outline, ...holes] = polygon.map((ring) => ring.map(project));
@@ -160,7 +185,8 @@ export function ExplorerMap({ mode, categories, selectedCode, onSelect }: { mode
   };
   const beginMultiTouch = (points: Point[]) => {
     if (points.length < 2) return;
-    gesture.current = { kind: "multi", originZoom: zoom, originPan: pan, midpoint: midpoint(points), distance: Math.max(touchDistance(points), 1) };
+    const current = transformRef.current;
+    gesture.current = { kind: "multi", originZoom: current.zoom, originPan: current.pan, midpoint: midpoint(points), distance: Math.max(touchDistance(points), 1) };
     multiTouchActive.current = true;
   };
   const onTouchStart = (event: GestureResponderEvent) => {
@@ -177,8 +203,7 @@ export function ExplorerMap({ mode, categories, selectedCode, onSelect }: { mode
     const nextZoom = Math.min(maxZoom, Math.max(minZoom, activeGesture.originZoom * (touchDistance(points) / activeGesture.distance)));
     const nextMidpoint = midpoint(points);
     const scale = screenScale();
-    setZoom(nextZoom);
-    setPan(clampPan({ x: activeGesture.originPan.x + (nextMidpoint[0] - activeGesture.midpoint[0]) / scale, y: activeGesture.originPan.y + (nextMidpoint[1] - activeGesture.midpoint[1]) / scale }, nextZoom));
+    scheduleTransform({ zoom: nextZoom, pan: clampPan({ x: activeGesture.originPan.x + (nextMidpoint[0] - activeGesture.midpoint[0]) / scale, y: activeGesture.originPan.y + (nextMidpoint[1] - activeGesture.midpoint[1]) / scale }, nextZoom) });
   };
   const onTouchEnd = (event: GestureResponderEvent) => {
     const activeGesture = gesture.current;
@@ -204,16 +229,7 @@ export function ExplorerMap({ mode, categories, selectedCode, onSelect }: { mode
     <Svg width="100%" height={mode === "domestic" ? 340 : 236} viewBox={config.viewBox} preserveAspectRatio="xMidYMid meet" accessibilityRole="image" accessibilityLabel={`${mode === "domestic" ? "India" : "World"} interactive region map`} onLayout={onLayout} onTouchStart={onTouchStart} onTouchMove={onTouchMove} onTouchEnd={onTouchEnd} onTouchCancel={onTouchEnd}>
       <Rect x="1" y="1" width={mode === "domestic" ? 200 : 246} height={mode === "domestic" ? 256 : 166} rx="12" fill={config.background} />
       <G transform={zoomTransform}>
-      {(map.data.features ?? []).map((feature, index) => {
-        const code = resolveCode(feature, mode, categoryByName);
-        const selectable = Boolean(code && code.startsWith(config.prefix));
-        const selected = selectable && code === selectedCode;
-        const label = String(featureName(feature) || code || "Map region");
-        const path = pathFor(feature, project);
-        return <G key={`${label}-${index}`}>
-          <Path d={path} fill={selected ? theme.colors.accent : selectable ? regionColors[index % regionColors.length] : "rgba(100,116,139,0.32)"} stroke={selected ? theme.colors.accentStrong : "rgba(15,23,42,0.42)"} strokeWidth={selected ? 1.6 : 0.35} opacity={selectable || selected ? 1 : 0.55} pointerEvents="none" />
-        </G>;
-      })}
+      <MapShapes shapes={shapes} selectedCode={selectedCode} accent={theme.colors.accent} accentStrong={theme.colors.accentStrong} />
       </G>
     </Svg>
     <View style={styles.zoomControls} accessibilityLabel="Map zoom controls">

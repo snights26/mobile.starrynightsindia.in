@@ -1,7 +1,7 @@
 import { ActivityIndicator, Image, StyleSheet, View } from "react-native";
 import { useAppTheme } from "@/src/theme/theme";
 
-const launchImage = require("@/assets/launch/starry-nights-launch.png");
+const launchImage = require("@/assets/launch/launcher.png");
 
 /** Theme-aware JS launch layer shown while the secure session is restored. */
 export function LaunchScreen() {
@@ -14,6 +14,6 @@ export function LaunchScreen() {
 
 const styles = StyleSheet.create({
   screen: { flex: 1, alignItems: "center", justifyContent: "center", padding: 32 },
-  image: { width: "84%", maxWidth: 390, height: "58%" },
+  image: { width: "74%", maxWidth: 280, aspectRatio: 1 },
   loader: { marginTop: 10 },
 });

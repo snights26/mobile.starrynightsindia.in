@@ -1,4 +1,4 @@
-import { Animated, Image, Modal, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Animated, Image, Modal, Pressable, ScrollView, StyleSheet, Text, useWindowDimensions, View } from "react-native";
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
@@ -7,7 +7,7 @@ import { useAuth } from "@/src/auth/AuthProvider";
 import { radius, spacing, type ThemePreference, useAppTheme, useThemePreference } from "@/src/theme/theme";
 
 type MenuItem = { label: string; icon: keyof typeof Ionicons.glyphMap; route: string };
-type DrawerSection = "account" | "explore" | "appearance";
+type DrawerSection = "account";
 
 const generalItems: MenuItem[] = [
   { label: "Start Exploring", icon: "map-outline", route: "/global-explorer" },
@@ -25,7 +25,8 @@ const accountItems: MenuItem[] = [
   { label: "Notifications", icon: "notifications-outline", route: "/notifications" },
 ];
 
-const brandImage = require("@/assets/brand/starry-nights-brand.png");
+const headerBrandImage = require("@/assets/brand/header-mobile.png");
+const drawerBrandImage = require("@/assets/launch/launcher.png");
 
 const themeChoices: { value: ThemePreference; label: string; icon: keyof typeof Ionicons.glyphMap }[] = [
   { value: "light", label: "Light", icon: "sunny-outline" },
@@ -39,6 +40,7 @@ export function MobileHeader() {
   const { preference, setPreference } = useThemePreference();
   const { isAuthenticated, user, logout } = useAuth();
   const insets = useSafeAreaInsets();
+  const { width } = useWindowDimensions();
   const [menuVisible, setMenuVisible] = useState(false);
   const [openSection, setOpenSection] = useState<DrawerSection | null>("account");
   const drawerProgress = useRef(new Animated.Value(0)).current;
@@ -58,6 +60,7 @@ export function MobileHeader() {
   const navigate = (route: string) => { closeDrawer(); router.push(route as never); };
   const toggleSection = (section: DrawerSection) => setOpenSection((current) => current === section ? null : section);
   const drawerTranslateX = drawerProgress.interpolate({ inputRange: [0, 1], outputRange: [-420, 0] });
+  const headerBrandWidth = Math.min(210, Math.max(142, width * 0.48));
 
   return <>
     <View style={[styles.header, { backgroundColor: theme.dark ? theme.colors.surface : "#F7F1E5", borderBottomColor: theme.colors.border, paddingTop: insets.top }]}>
@@ -65,7 +68,7 @@ export function MobileHeader() {
         <Pressable onPress={() => setMenuVisible(true)} accessibilityRole="button" accessibilityLabel="Open navigation menu" style={[styles.iconButton, { backgroundColor: theme.colors.soft }]}>
           <Ionicons name="menu" size={23} color={theme.colors.text} />
         </Pressable>
-        <Image source={brandImage} resizeMode="contain" style={styles.brandImage} accessibilityLabel="Starry Nights brand" />
+        <Image source={headerBrandImage} resizeMode="contain" style={[styles.brandImage, { width: headerBrandWidth }]} accessibilityLabel="Starry Nights brand" />
         <View style={styles.headerBalance} />
       </View>
       <Pressable onPress={() => router.push("/search")} accessibilityRole="button" accessibilityLabel="Search packages" style={[styles.search, { backgroundColor: theme.colors.soft, borderColor: theme.colors.border }]}>
@@ -78,24 +81,24 @@ export function MobileHeader() {
         <Animated.View style={[styles.drawerShell, { transform: [{ translateX: drawerTranslateX }] }]}>
           <SafeAreaView edges={["top", "bottom"]} style={[styles.drawer, { backgroundColor: theme.colors.surface }]}>
             <View style={styles.drawerHeading}>
-              <View style={styles.drawerHeadingCopy}><Image source={brandImage} resizeMode="contain" style={styles.drawerBrandImage} accessibilityLabel="Starry Nights brand" /><Text numberOfLines={1} style={{ color: theme.colors.muted }}>{isAuthenticated ? `Welcome, ${user?.name || "traveller"}` : "Start exploring"}</Text></View>
+              <View style={styles.drawerHeadingCopy}><Image source={drawerBrandImage} resizeMode="contain" style={styles.drawerBrandImage} accessibilityLabel="Starry Nights brand" /><Text numberOfLines={1} style={{ color: theme.colors.muted }}>{isAuthenticated ? `Welcome, ${user?.name || "traveller"}` : "Start exploring"}</Text></View>
               <Pressable onPress={closeDrawer} accessibilityRole="button" accessibilityLabel="Close navigation menu" style={[styles.iconButton, { backgroundColor: theme.colors.soft }]}><Ionicons name="close" size={22} color={theme.colors.text} /></Pressable>
             </View>
             <ScrollView contentContainerStyle={styles.drawerContent} showsVerticalScrollIndicator={false}>
               <DrawerAccordion label="Your Account" open={openSection === "account"} onPress={() => toggleSection("account")}>
                 {isAuthenticated ? <><View style={styles.menu}>{accountItems.map((item) => <DrawerItem key={item.route} item={item} onPress={() => navigate(item.route)} />)}</View><Pressable onPress={() => { closeDrawer(); void logout(); }} accessibilityRole="button" style={[styles.logout, { borderColor: theme.colors.accent }]}><Ionicons name="log-out-outline" size={20} color={theme.colors.accent} /><Text style={{ color: theme.colors.accent, fontWeight: "800" }}>Logout</Text></Pressable></> : <Pressable onPress={() => navigate("/login")} accessibilityRole="button" style={[styles.login, { backgroundColor: theme.colors.accent }]}><Ionicons name="log-in-outline" size={20} color="#fff" /><Text style={styles.loginText}>Login</Text></Pressable>}
               </DrawerAccordion>
-              <DrawerAccordion label="Explore" open={openSection === "explore"} onPress={() => toggleSection("explore")}>
+              <DrawerGroup label="Explore">
                 <View style={styles.menu}>{generalItems.map((item) => <DrawerItem key={item.route} item={item} onPress={() => navigate(item.route)} />)}</View>
-              </DrawerAccordion>
-              <DrawerAccordion label="Appearance" open={openSection === "appearance"} onPress={() => toggleSection("appearance")}>
+              </DrawerGroup>
+              <DrawerGroup label="Appearance">
                 <View style={styles.themeChoices}>{themeChoices.map((choice) => {
                   const selected = preference === choice.value;
                   return <Pressable key={choice.value} onPress={() => setPreference(choice.value)} accessibilityRole="radio" accessibilityState={{ selected }} style={[styles.themeChoice, { borderColor: selected ? theme.colors.accent : theme.colors.border, backgroundColor: selected ? theme.colors.accentSoft : theme.colors.soft }]}><Ionicons name={choice.icon} size={17} color={selected ? theme.colors.accentStrong : theme.colors.muted} /><Text style={{ color: selected ? theme.colors.accentStrong : theme.colors.text, fontSize: 12, fontWeight: "800" }}>{choice.label}</Text></Pressable>;
                 })}</View>
-              </DrawerAccordion>
+              </DrawerGroup>
               <View style={[styles.standaloneItem, { borderColor: theme.colors.border, backgroundColor: theme.colors.card }]}>
-                <DrawerItem item={{ label: "Settings & Support", icon: "settings-outline", route: "/settings" }} onPress={() => navigate("/settings")} />
+                <DrawerItem item={{ label: "Support and Information", icon: "settings-outline", route: "/settings" }} onPress={() => navigate("/settings")} />
               </View>
             </ScrollView>
           </SafeAreaView>
@@ -122,10 +125,18 @@ function DrawerAccordion({ label, open, onPress, children }: { label: string; op
   </View>;
 }
 
+function DrawerGroup({ label, children }: { label: string; children: ReactNode }) {
+  const theme = useAppTheme();
+  return <View style={[styles.drawerGroup, { borderColor: theme.colors.border, backgroundColor: theme.colors.card }]}>
+    <Text style={[styles.drawerGroupLabel, { color: theme.colors.text }]}>{label}</Text>
+    <View style={[styles.drawerGroupBody, { borderTopColor: theme.colors.border }]}>{children}</View>
+  </View>;
+}
+
 const styles = StyleSheet.create({
   header: { borderBottomWidth: StyleSheet.hairlineWidth, paddingHorizontal: spacing.md, paddingBottom: spacing.sm, gap: spacing.sm },
   topRow: { minHeight: 56, flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: spacing.sm },
-  brandImage: { width: 54, height: 54 },
+  brandImage: { height: 48, aspectRatio: 1200 / 284, maxWidth: "58%" },
   iconButton: { width: 42, height: 42, borderRadius: 21, alignItems: "center", justifyContent: "center" },
   headerBalance: { width: 42, height: 42 },
   search: { minHeight: 42, borderRadius: radius.pill, borderWidth: 1, paddingHorizontal: spacing.md, gap: spacing.xs, flexDirection: "row", alignItems: "center" },
@@ -136,12 +147,15 @@ const styles = StyleSheet.create({
   drawer: { flex: 1, paddingHorizontal: spacing.md },
   drawerHeading: { paddingTop: spacing.sm, paddingBottom: spacing.md, flexDirection: "row", justifyContent: "space-between", alignItems: "center", gap: spacing.sm },
   drawerHeadingCopy: { flex: 1, minWidth: 0 },
-  drawerBrandImage: { width: 56, height: 56, alignSelf: "flex-start" },
+  drawerBrandImage: { width: 72, height: 72, alignSelf: "flex-start" },
   drawerContent: { gap: spacing.sm, paddingBottom: spacing.xl },
   accordion: { borderWidth: 1, borderRadius: radius.md, overflow: "hidden" },
   accordionHeader: { minHeight: 52, paddingHorizontal: spacing.md, flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: spacing.sm },
   accordionLabel: { fontSize: 15, fontWeight: "900", letterSpacing: .2 },
   accordionBody: { borderTopWidth: StyleSheet.hairlineWidth, paddingHorizontal: spacing.md, paddingBottom: spacing.xs },
+  drawerGroup: { borderWidth: 1, borderRadius: radius.md, overflow: "hidden" },
+  drawerGroupLabel: { minHeight: 48, paddingHorizontal: spacing.md, paddingTop: spacing.md, fontSize: 15, fontWeight: "900", letterSpacing: .2 },
+  drawerGroupBody: { borderTopWidth: StyleSheet.hairlineWidth, paddingHorizontal: spacing.md, paddingBottom: spacing.xs },
   standaloneItem: { borderWidth: 1, borderRadius: radius.md, overflow: "hidden", paddingHorizontal: spacing.md },
   menu: { gap: 0 },
   menuItem: { minHeight: 55, flexDirection: "row", alignItems: "center", gap: spacing.sm, borderBottomWidth: StyleSheet.hairlineWidth },

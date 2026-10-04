@@ -11,21 +11,29 @@ export const featuredRowsForPlacement = (rows: FeaturedRow[], placement: string)
   .filter((row) => String(row.visibleOn ?? placement).trim().toLowerCase() === placement)
   .sort((left, right) => (left.sequence ?? Number.MAX_SAFE_INTEGER) - (right.sequence ?? Number.MAX_SAFE_INTEGER));
 
+export type FeaturedRowBehavior = "package" | "category" | "trending";
+export const featuredRowBehavior = (row: FeaturedRow): FeaturedRowBehavior => {
+  const type = String(row.rowType || row.type).trim().toLowerCase();
+  if (type === "category") return "category";
+  if (type === "top10" || type === "trending") return "trending";
+  return "package";
+};
+
 const categoryCode = (category: Category) => category.code || category.categoryCode || category.id;
 const isPackage = (item: PackageSummary | Category): item is PackageSummary => Boolean((item as PackageSummary).packageCode);
-const isCategory = (row: FeaturedRow) => String(row.rowType || row.type).toLowerCase() === "category";
 
 /** A server-configured public row. Navigation carries rowId plus visibleOn, never title-based inference. */
 export function FeaturedRowRail({ row, placement }: { row: FeaturedRow; placement: string }) {
   const theme = useAppTheme();
-  const categoryRow = isCategory(row);
+  const behavior = featuredRowBehavior(row);
+  const categoryRow = behavior === "category";
   const categories = row.items.filter((item): item is Category => !isPackage(item));
   const packages = row.items.filter((item): item is PackageSummary => isPackage(item));
   if (categoryRow && !categories.length) return null;
   if (!categoryRow && !packages.length) return null;
   const sourcePlacement = String(row.visibleOn || placement).toLowerCase();
   const openAll = () => {
-    const params = { rowId: row.rowId || row.id, placement: sourcePlacement, title: featuredRowTitle(row) };
+    const params = { rowId: row.rowId || row.id, placement: sourcePlacement, title: featuredRowTitle(row), behavior };
     router.push((categoryRow
       ? { pathname: "/category-collection/[rowId]", params }
       : { pathname: "/collection/[rowId]", params }) as never);

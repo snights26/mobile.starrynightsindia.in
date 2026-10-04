@@ -32,7 +32,7 @@ function RootNavigator() {
     <Stack.Screen name="chatbot" options={{ title: "ATLAS" }} />
     <Stack.Screen name="contact" options={{ title: "Contact us" }} />
     <Stack.Screen name="about" options={{ title: "About Starry Nights" }} />
-    <Stack.Screen name="settings" options={{ title: "Settings" }} />
+    <Stack.Screen name="settings" options={{ title: "Support and Information" }} />
   </Stack></>;
 }
 

@@ -24,6 +24,7 @@
         "backgroundColor": "#E50914"
       },
       "edgeToEdgeEnabled": true,
+      "softwareKeyboardLayoutMode": "resize",
       "predictiveBackGestureEnabled": false
     },
     "plugins": [
@@ -31,12 +32,12 @@
       [
         "expo-splash-screen",
         {
-          "image": "./assets/launch/starry-nights-launch.png",
-          "imageWidth": 320,
+          "image": "./assets/launch/launcher.png",
+          "imageWidth": 260,
           "resizeMode": "contain",
           "backgroundColor": "#F8FAFC",
           "dark": {
-            "image": "./assets/launch/starry-nights-launch.png",
+            "image": "./assets/launch/launcher.png",
             "backgroundColor": "#000000"
           }
         }
