@@ -43,6 +43,7 @@ export function MobileHeader() {
   const { width } = useWindowDimensions();
   const [menuVisible, setMenuVisible] = useState(false);
   const [openSection, setOpenSection] = useState<DrawerSection | null>("account");
+  const [pendingRoute, setPendingRoute] = useState<string | null>(null);
   const drawerProgress = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
@@ -52,14 +53,24 @@ export function MobileHeader() {
     Animated.timing(drawerProgress, { toValue: 1, duration: 220, useNativeDriver: true }).start();
   }, [drawerProgress, menuVisible]);
 
-  const closeDrawer = (afterClose?: () => void) => {
+  const closeDrawer = () => {
     Animated.timing(drawerProgress, { toValue: 0, duration: 180, useNativeDriver: true }).start(({ finished }) => {
       if (!finished) return;
       setMenuVisible(false);
-      afterClose?.();
     });
   };
-  const navigate = (route: string) => closeDrawer(() => router.push(route as never));
+  const navigate = (route: string) => {
+    setPendingRoute(route);
+    closeDrawer();
+  };
+  useEffect(() => {
+    if (menuVisible || !pendingRoute) return;
+    const frame = requestAnimationFrame(() => {
+      setPendingRoute(null);
+      router.push(pendingRoute as never);
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [menuVisible, pendingRoute]);
   const toggleSection = (section: DrawerSection) => setOpenSection((current) => current === section ? null : section);
   const drawerTranslateX = drawerProgress.interpolate({ inputRange: [0, 1], outputRange: [-420, 0] });
   const headerBrandWidth = Math.min(210, Math.max(142, width * 0.48));
