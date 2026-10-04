@@ -75,9 +75,9 @@ export function MobileHeader() {
         <Image source={headerBrandImage} resizeMode="contain" style={[styles.brandImage, { width: headerBrandWidth }]} accessibilityLabel="Starry Nights brand" />
         {isProfile ? <Pressable onPress={() => router.push("/account" as never)} accessibilityRole="button" accessibilityLabel="Open Your Account" hitSlop={8} style={[styles.iconButton, styles.headerIconButton]}><Ionicons name="settings-outline" size={21} color="#fff" /></Pressable> : <View style={styles.headerBalance} />}
       </View>
-      <Pressable onPress={() => router.push("/search")} accessibilityRole="button" accessibilityLabel="Search packages" style={[styles.search, { backgroundColor: "#111827", borderColor: "#374151" }]}>
-        <Ionicons name="search" size={19} color="#CBD5E1" />
-        <Text numberOfLines={1} style={[styles.searchLabel, { color: "#CBD5E1" }]}>Search destinations and journeys</Text>
+      <Pressable onPress={() => router.push("/search")} accessibilityRole="button" accessibilityLabel="Search packages" style={[styles.search, { backgroundColor: theme.colors.surface, borderColor: theme.colors.border }]}>
+        <Ionicons name="search" size={19} color={theme.colors.text} />
+        <Text numberOfLines={1} style={[styles.searchLabel, { color: theme.colors.muted }]}>Search destinations and journeys</Text>
       </Pressable>
     </View>
     <Modal visible={menuVisible} transparent animationType="none" onRequestClose={() => closeDrawer()} statusBarTranslucent>

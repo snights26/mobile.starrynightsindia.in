@@ -4,7 +4,6 @@ import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import { useQuery } from "@tanstack/react-query";
 import { catalogApi, publicApi } from "@/src/api/services";
-import { CategoryRail } from "@/src/components/CategoryRail";
 import { FeaturedRowRail, featuredRowsForPlacement } from "@/src/components/FeaturedRowRail";
 import { ErrorView } from "@/src/components/StateViews";
 import { Screen } from "@/src/components/Screen";
@@ -55,7 +54,6 @@ function HomeHero({ heroes }: { heroes: Hero[] }) {
 export default function HomeScreen() {
   const theme = useAppTheme();
   const content = useQuery({ queryKey: ["home"], queryFn: async () => Promise.all([catalogApi.heroes(), catalogApi.featured("home"), publicApi.occasion()]) });
-  const categories = useQuery({ queryKey: ["home", "categories"], queryFn: catalogApi.categories });
   const [heroes, fetchedRows, occasion] = content.data ?? [[], [], null];
   const rows = featuredRowsForPlacement(fetchedRows as FeaturedRow[], "home");
   const fallbackPackages = useQuery({ queryKey: ["home", "fallback-packages"], queryFn: () => catalogApi.packages(), enabled: Boolean(content.data && !rows.some((row) => row.items.some((item) => "packageCode" in item))) });
@@ -64,7 +62,6 @@ export default function HomeScreen() {
   if (content.isError) return <Screen><ErrorView message="We could not load the travel catalogue." retry={() => content.refetch()} /></Screen>;
   return <Screen>
     <HomeHero heroes={heroes} />
-    {categories.data ? <CategoryRail categories={categories.data} /> : null}
     {occasion ? <Pressable onPress={() => router.push("/enquiry")} style={[styles.occasion, { backgroundColor: theme.colors.accentSoft }]}><Ionicons name="sparkles" color={theme.colors.accent} size={22} /><View style={{ flex: 1 }}><Text style={[styles.occasionTitle, { color: theme.colors.text }]}>{occasion.title}</Text>{occasion.message ? <Text numberOfLines={2} style={{ color: theme.colors.muted }}>{occasion.message}</Text> : null}</View></Pressable> : null}
     {rows.map((row) => <FeaturedRowRail row={row} placement="home" key={row.id || row.rowId} />)}
     {!rows.length && fallbackRow ? <FeaturedRowRail row={fallbackRow} placement="home" /> : null}

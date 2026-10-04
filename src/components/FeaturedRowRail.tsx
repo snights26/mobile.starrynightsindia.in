@@ -53,11 +53,40 @@ export function FeaturedRowRail({ row, placement }: { row: FeaturedRow; placemen
         </Pressable>;
       }} />
   </Section>;
+  if (behavior === "top10") return <Section title={featuredRowTitle(row)} action={action}><TopTenRail packages={packages} /></Section>;
   return <Section title={featuredRowTitle(row)} action={action}><FlatList horizontal data={packages} showsHorizontalScrollIndicator={false} keyExtractor={(item, index) => item.packageCode || item.code || String(index)} contentContainerStyle={styles.horizontal} renderItem={({ item }) => <PackageCard item={item} />} /></Section>;
+}
+
+/**
+ * A ranked rail deliberately keeps the server item array intact: position is the
+ * rank. It is visually related to the Public Web Top 10 component without
+ * borrowing another product's branding or re-sorting client-side.
+ */
+function TopTenRail({ packages }: { packages: PackageSummary[] }) {
+  const theme = useAppTheme();
+  return <FlatList
+    horizontal
+    data={packages}
+    showsHorizontalScrollIndicator={false}
+    keyExtractor={(item, index) => `${item.packageCode || item.code || "package"}-${index}`}
+    contentContainerStyle={styles.topTenHorizontal}
+    renderItem={({ item, index }) => {
+      const rank = index + 1;
+      return <View accessibilityLabel={`Rank ${rank}: ${item.name || item.title}`} style={styles.topTenItem}>
+        <Text pointerEvents="none" style={[styles.topTenRank, rank >= 10 ? styles.topTenRankDouble : null, { color: theme.dark ? "rgba(248,113,113,.30)" : "rgba(15,23,42,.18)" }]}>{rank}</Text>
+        <View style={styles.topTenPackage}><PackageCard item={item} compact /></View>
+      </View>;
+    }}
+  />;
 }
 
 const styles = StyleSheet.create({
   horizontal: { gap: spacing.sm, paddingRight: spacing.md },
+  topTenHorizontal: { gap: spacing.xs, paddingRight: spacing.md, alignItems: "flex-end" },
+  topTenItem: { width: 218, height: 222, position: "relative", justifyContent: "flex-end" },
+  topTenRank: { position: "absolute", left: 0, bottom: -6, fontSize: 174, lineHeight: 166, fontWeight: "900", letterSpacing: -10, includeFontPadding: false },
+  topTenRankDouble: { fontSize: 152, lineHeight: 150, letterSpacing: -14, left: -3 },
+  topTenPackage: { position: "absolute", right: 0, bottom: 0 },
   categoryCard: { width: 172, height: 122, borderRadius: radius.md, borderWidth: 1, overflow: "hidden" },
   categoryImage: { flex: 1 }, imageVeil: { flex: 1, justifyContent: "flex-end", padding: spacing.sm, backgroundColor: "rgba(0,0,0,.30)" },
   categoryText: { color: "#fff", fontSize: 15, fontWeight: "800" }, categoryFallback: { flex: 1, justifyContent: "flex-end", padding: spacing.sm },

@@ -7,10 +7,12 @@ import type { AuthTokens, PackageSummary, User } from "@/src/types/api";
 type AuthContextValue = {
   user: User | null; isAuthenticated: boolean; isLoading: boolean; needsLogin: boolean;
   loginWithGoogle: (idToken: string) => Promise<User>; refreshSession: () => Promise<boolean>; logout: () => Promise<void>;
-  reloadUser: () => Promise<User | null>; toggleBucket: (item: PackageSummary) => Promise<PackageSummary[]>; likedCodes: Set<string>; bucketItems: PackageSummary[]; bucketLoading: boolean;
+  reloadUser: () => Promise<User | null>; toggleBucket: (item: PackageSummary) => Promise<PackageSummary[]>; likedCodes: Set<string>;
+  bucketItems: PackageSummary[]; bucketLoading: boolean; bucketError: string | null; reloadBucket: (options?: { force?: boolean }) => Promise<void>;
 };
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 const refreshLeadMs = 60_000;
+const bucketStaleMs = 60_000;
 
 export function AuthProvider({ children }: PropsWithChildren) {
   const [user, setUser] = useState<User | null>(null);
@@ -18,8 +20,14 @@ export function AuthProvider({ children }: PropsWithChildren) {
   const [needsLogin, setNeedsLogin] = useState(false);
   const [liked, setLiked] = useState<PackageSummary[]>([]);
   const [bucketLoading, setBucketLoading] = useState(false);
+  const [bucketStatus, setBucketStatus] = useState<"idle" | "loading" | "ready" | "error">("idle");
+  const [bucketError, setBucketError] = useState<string | null>(null);
   const refreshTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
-  const bootstrapDone = useRef(false);
+  const bucketOwner = useRef<string | null>(null);
+  const bucketAutoLoadedFor = useRef<string | null>(null);
+  const bucketFetchedAt = useRef(0);
+  const bucketRequestId = useRef(0);
+  const bucketInFlight = useRef<Promise<void> | null>(null);
 
   const stopTimer = () => { if (refreshTimer.current) clearTimeout(refreshTimer.current); refreshTimer.current = undefined; };
   const applySession = useCallback(async (tokens: AuthTokens): Promise<StoredSession> => {
@@ -32,7 +40,14 @@ export function AuthProvider({ children }: PropsWithChildren) {
   }, []);
 
   const endSession = useCallback(async (expired = false) => {
-    stopTimer(); await clearSession(); setUser(null); setLiked([]); setBucketLoading(false); if (expired) setNeedsLogin(true);
+    stopTimer(); await clearSession();
+    bucketRequestId.current += 1;
+    bucketInFlight.current = null;
+    bucketOwner.current = null;
+    bucketAutoLoadedFor.current = null;
+    bucketFetchedAt.current = 0;
+    setUser(null); setLiked([]); setBucketLoading(false); setBucketStatus("idle"); setBucketError(null);
+    if (expired) setNeedsLogin(true);
   }, []);
 
   const refreshSession = useCallback(async (): Promise<boolean> => {
@@ -48,10 +63,50 @@ export function AuthProvider({ children }: PropsWithChildren) {
     try { const next = await customerApi.me(); setUser(next); return next; } catch { return null; }
   }, []);
 
-  const loadBucket = useCallback(async () => {
+  /**
+   * The authenticated bucket has one owner: this provider.  Profile, View All,
+   * and package-card mutations all read the same snapshot so an unfinished
+   * initial request cannot be mistaken for an empty list.
+   */
+  const reloadBucket = useCallback(async ({ force = false }: { force?: boolean } = {}): Promise<void> => {
+    const ownerId = user?.id;
+    if (!ownerId) return;
+    if (bucketOwner.current !== ownerId) {
+      bucketRequestId.current += 1;
+      bucketInFlight.current = null;
+      bucketOwner.current = ownerId;
+      bucketFetchedAt.current = 0;
+      setLiked([]);
+      setBucketStatus("idle");
+      setBucketError(null);
+    }
+    if (!force && bucketStatus === "ready" && Date.now() - bucketFetchedAt.current < bucketStaleMs) return;
+    if (bucketInFlight.current) return bucketInFlight.current;
+
+    const requestId = ++bucketRequestId.current;
     setBucketLoading(true);
-    try { setLiked(await customerApi.bucket()); } catch { setLiked([]); } finally { setBucketLoading(false); }
-  }, []);
+    setBucketStatus("loading");
+    setBucketError(null);
+    const request = customerApi.bucket()
+      .then((items) => {
+        if (bucketRequestId.current !== requestId || bucketOwner.current !== ownerId) return;
+        setLiked(items);
+        bucketFetchedAt.current = Date.now();
+        setBucketStatus("ready");
+      })
+      .catch(() => {
+        if (bucketRequestId.current !== requestId || bucketOwner.current !== ownerId) return;
+        // A transport failure is not evidence of an empty bucket.
+        setBucketStatus("error");
+        setBucketError("Your saved packages could not be loaded.");
+      })
+      .finally(() => {
+        if (bucketRequestId.current === requestId && bucketOwner.current === ownerId) setBucketLoading(false);
+        if (bucketInFlight.current === request) bucketInFlight.current = null;
+      });
+    bucketInFlight.current = request;
+    return request;
+  }, [bucketStatus, user?.id]);
 
   useEffect(() => {
     configureInvalidSessionHandler(() => { void endSession(true); });
@@ -61,22 +116,30 @@ export function AuthProvider({ children }: PropsWithChildren) {
   useEffect(() => {
     void (async () => {
       const stored = await readSession();
-      if (!stored) { setIsLoading(false); bootstrapDone.current = true; return; }
-      if (stored.refreshExpiry <= Date.now()) { await endSession(true); setIsLoading(false); bootstrapDone.current = true; return; }
+      if (!stored) { setIsLoading(false); return; }
+      if (stored.refreshExpiry <= Date.now()) { await endSession(true); setIsLoading(false); return; }
       if (stored.accessExpiry <= Date.now()) { await refreshSession(); }
       else { setUser(stored.user); await reloadUser(); stopTimer(); refreshTimer.current = setTimeout(() => { void refreshSession(); }, Math.max(0, stored.accessExpiry - Date.now() - refreshLeadMs)); }
-      setIsLoading(false); bootstrapDone.current = true;
+      setIsLoading(false);
     })();
     return stopTimer;
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  useEffect(() => { if (user?.id && bootstrapDone.current) void loadBucket(); }, [loadBucket, user?.id]);
+  // Wait for session bootstrap to resolve the identity, then hydrate the one
+  // canonical bucket snapshot. This cannot miss the bootstrap transition.
+  useEffect(() => {
+    if (!isLoading && user?.id && bucketAutoLoadedFor.current !== user.id) {
+      bucketAutoLoadedFor.current = user.id;
+      void reloadBucket({ force: true });
+    }
+  }, [isLoading, reloadBucket, user?.id]);
 
   const loginWithGoogle = useCallback(async (idToken: string) => {
     const tokens = await post<AuthTokens>("/auth/google", { idToken }, { skipAuthRefresh: true } as never);
-    await applySession(tokens); await loadBucket(); return tokens.user;
-  }, [applySession, loadBucket]);
+    await applySession(tokens);
+    return tokens.user;
+  }, [applySession]);
 
   const logout = useCallback(async () => {
     const session = await readSession();
@@ -90,10 +153,12 @@ export function AuthProvider({ children }: PropsWithChildren) {
     const before = liked;
     const exists = before.some((current) => (current.packageCode || current.code).toUpperCase() === code.toUpperCase());
     setLiked(exists ? before.filter((current) => (current.packageCode || current.code).toUpperCase() !== code.toUpperCase()) : [...before, item]);
-    try { const next = await customerApi.toggleBucket(code); setLiked(next); return next; } catch (error) { setLiked(before); throw error; }
+    setBucketStatus("ready"); setBucketError(null); bucketFetchedAt.current = Date.now();
+    try { const next = await customerApi.toggleBucket(code); setLiked(next); bucketFetchedAt.current = Date.now(); return next; } catch (error) { setLiked(before); throw error; }
   }, [liked, user]);
 
-  const value = useMemo<AuthContextValue>(() => ({ user, isAuthenticated: Boolean(user), isLoading, needsLogin, loginWithGoogle, refreshSession, logout, reloadUser, toggleBucket, likedCodes: new Set(liked.map((item) => (item.packageCode || item.code).toUpperCase())), bucketItems: liked, bucketLoading }), [user, isLoading, needsLogin, loginWithGoogle, refreshSession, logout, reloadUser, toggleBucket, liked, bucketLoading]);
+  const bucketIsPending = Boolean(user) && (bucketStatus === "idle" || bucketStatus === "loading");
+  const value = useMemo<AuthContextValue>(() => ({ user, isAuthenticated: Boolean(user), isLoading, needsLogin, loginWithGoogle, refreshSession, logout, reloadUser, toggleBucket, likedCodes: new Set(liked.map((item) => (item.packageCode || item.code).toUpperCase())), bucketItems: liked, bucketLoading: bucketLoading || bucketIsPending, bucketError, reloadBucket }), [user, isLoading, needsLogin, loginWithGoogle, refreshSession, logout, reloadUser, toggleBucket, liked, bucketLoading, bucketIsPending, bucketError, reloadBucket]);
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
 export const useAuth = (): AuthContextValue => {

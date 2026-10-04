@@ -3,7 +3,7 @@
     "name": "Starry Nights",
     "slug": "starry-nights-mobile",
     "version": "1.0.0",
-    "icon": "./assets/starry-nights-holidays.png",
+    "icon": "./assets/icon/owner-android-icon.png",
     "orientation": "portrait",
     "scheme": "starrynights",
     "userInterfaceStyle": "automatic",
@@ -20,8 +20,8 @@
         "android.permission.RECORD_AUDIO"
       ],
       "adaptiveIcon": {
-        "foregroundImage": "./assets/starry-nights-holidays.png",
-        "backgroundColor": "#E50914"
+        "foregroundImage": "./assets/icon/owner-android-icon.png",
+        "backgroundColor": "#050505"
       },
       "edgeToEdgeEnabled": true,
       "softwareKeyboardLayoutMode": "resize",
