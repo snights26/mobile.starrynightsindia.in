@@ -15,9 +15,17 @@ const generalItems: MenuItem[] = [
   { label: "World Time", icon: "time-outline", route: "/time-zones" },
   { label: "Chat with ATLAS", icon: "sparkles-outline", route: "/chatbot" },
 ];
+const accountItems: MenuItem[] = [
+  { label: "Edit Profile", icon: "person-outline", route: "/profile-edit" },
+  { label: "My Trips", icon: "airplane-outline", route: "/(tabs)/trips" },
+  { label: "Payment History", icon: "card-outline", route: "/payments" },
+  { label: "Recently Viewed", icon: "time-outline", route: "/recently-viewed" },
+  { label: "Notifications", icon: "notifications-outline", route: "/notifications" },
+];
 
-const headerBrandImage = require("@/assets/brand/header-mobile.png");
-const drawerBrandImage = require("@/assets/launch/launcher.png");
+const lightHeaderBrandImage = require("@/assets/brand/starry-nights-light-theme.png");
+const darkHeaderBrandImage = require("@/assets/brand/starry-nights-dark-theme.png");
+const drawerBrandImage = require("@/assets/icon/starry-nights-icon.png");
 
 const themeChoices: { value: ThemePreference; label: string; icon: keyof typeof Ionicons.glyphMap }[] = [
   { value: "light", label: "Light", icon: "sunny-outline" },
@@ -63,17 +71,18 @@ export function MobileHeader() {
   }, [menuVisible, pendingRoute]);
   const drawerTranslateX = drawerProgress.interpolate({ inputRange: [0, 1], outputRange: [-420, 0] });
   const headerBrandWidth = Math.min(210, Math.max(142, width * 0.48));
+  const headerBrandImage = theme.dark ? darkHeaderBrandImage : lightHeaderBrandImage;
   const isProfile = pathname === "/profile";
 
   return <>
-    <StatusBar style="light" backgroundColor="#0B0F19" />
-    <View style={[styles.header, { backgroundColor: "#0B0F19", borderBottomColor: "#1F2937", paddingTop: insets.top }]}>
+    <StatusBar style={theme.dark ? "light" : "dark"} backgroundColor={theme.colors.surface} />
+    <View style={[styles.header, { backgroundColor: theme.colors.surface, borderBottomColor: theme.colors.border, paddingTop: insets.top }]}>
       <View style={styles.topRow}>
-        <Pressable onPress={() => setMenuVisible(true)} accessibilityRole="button" accessibilityLabel="Open navigation menu" style={[styles.iconButton, styles.headerIconButton]}>
-          <Ionicons name="menu" size={23} color="#fff" />
+        <Pressable onPress={() => setMenuVisible(true)} accessibilityRole="button" accessibilityLabel="Open navigation menu" style={[styles.iconButton, styles.headerIconButton, { backgroundColor: theme.colors.soft }]}>
+          <Ionicons name="menu" size={23} color={theme.colors.text} />
         </Pressable>
         <Image source={headerBrandImage} resizeMode="contain" style={[styles.brandImage, { width: headerBrandWidth }]} accessibilityLabel="Starry Nights brand" />
-        {isProfile ? <Pressable onPress={() => router.push("/account" as never)} accessibilityRole="button" accessibilityLabel="Open Your Account" hitSlop={8} style={[styles.iconButton, styles.headerIconButton]}><Ionicons name="settings-outline" size={21} color="#fff" /></Pressable> : <View style={styles.headerBalance} />}
+        {isProfile ? <Pressable onPress={() => router.push("/account" as never)} accessibilityRole="button" accessibilityLabel="Open Your Account" hitSlop={8} style={[styles.iconButton, styles.headerIconButton, { backgroundColor: theme.colors.soft }]}><Ionicons name="settings-outline" size={21} color={theme.colors.text} /></Pressable> : <View style={styles.headerBalance} />}
       </View>
     </View>
     <View style={[styles.searchSurface, { backgroundColor: theme.colors.background, borderBottomColor: theme.colors.border }]}>
@@ -91,6 +100,12 @@ export function MobileHeader() {
               <Pressable onPress={() => closeDrawer()} accessibilityRole="button" accessibilityLabel="Close navigation menu" style={[styles.iconButton, { backgroundColor: theme.colors.soft }]}><Ionicons name="close" size={22} color={theme.colors.text} /></Pressable>
             </View>
             <ScrollView contentContainerStyle={styles.drawerContent} showsVerticalScrollIndicator={false}>
+              <DrawerGroup label="Your Account">
+                <View style={styles.menu}>{isAuthenticated
+                  ? accountItems.map((item) => <DrawerItem key={item.route} item={item} onPress={() => navigate(item.route)} />)
+                  : <DrawerItem item={{ label: "Login", icon: "log-in-outline", route: "/login" }} onPress={() => navigate("/login")} />}
+                </View>
+              </DrawerGroup>
               <DrawerGroup label="Explore">
                 <View style={styles.menu}>{generalItems.map((item) => <DrawerItem key={item.route} item={item} onPress={() => navigate(item.route)} />)}</View>
               </DrawerGroup>
@@ -128,9 +143,9 @@ function DrawerGroup({ label, children }: { label: string; children: ReactNode }
 const styles = StyleSheet.create({
   header: { borderBottomWidth: StyleSheet.hairlineWidth, paddingHorizontal: spacing.md, paddingBottom: spacing.sm },
   topRow: { minHeight: 56, flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: spacing.sm },
-  brandImage: { height: 48, aspectRatio: 1200 / 284, maxWidth: "58%" },
+  brandImage: { height: 54, maxWidth: "58%" },
   iconButton: { width: 42, height: 42, borderRadius: 21, alignItems: "center", justifyContent: "center" },
-  headerIconButton: { backgroundColor: "#1F2937" },
+  headerIconButton: {},
   headerBalance: { width: 42, height: 42 },
   searchSurface: { borderBottomWidth: StyleSheet.hairlineWidth, paddingHorizontal: spacing.md, paddingVertical: spacing.sm },
   search: { minHeight: 42, borderRadius: radius.pill, borderWidth: 1, paddingHorizontal: spacing.md, gap: spacing.xs, flexDirection: "row", alignItems: "center" },

@@ -128,6 +128,7 @@ export type Payment = {
 
 export type Invoice = { invoiceNo: string; billTo: string; tourType: string; pax: number; date: string; totalCost: number; paidAmount: number; dueAmount: number; payments: Payment[] };
 export type Notification = { id: string; notificationId?: string; title: string; message?: string; type?: string; image?: string; imageUrl?: string; pdf?: string; pdfUrl?: string };
+export type AppAnnouncement = { id: string; title: string; message: string; link?: string; linkLabel?: string; version: number; startsAt?: string; expiresAt?: string };
 export type GalleryImage = { id: string; imageId?: string; title?: string; image?: string; url?: string; approved?: boolean; featured?: boolean };
 export type DirectUploadAuthorization = {
   intent: string;

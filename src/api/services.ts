@@ -1,5 +1,5 @@
 import { del, get, post, put } from "@/src/api/client";
-import type { Category, ChatResponse, DirectUploadAuthorization, EnquiryInput, FeaturedRow, GalleryImage, Hero, Invoice, Notification, PackageDetail, PackageSummary, Payment, RecentlyViewed, Statistic, Tour, User } from "@/src/types/api";
+import type { AppAnnouncement, Category, ChatResponse, DirectUploadAuthorization, EnquiryInput, FeaturedRow, GalleryImage, Hero, Invoice, Notification, PackageDetail, PackageSummary, Payment, RecentlyViewed, Statistic, Tour, User } from "@/src/types/api";
 
 export const catalogApi = {
   packages: (params?: { category?: string; brand?: string; rowId?: string; regionCode?: string }) => get<PackageSummary[]>("/packages", { params }),
@@ -34,6 +34,7 @@ export const customerApi = {
 export const publicApi = {
   gallery: () => get<GalleryImage[]>("/gallery/public"),
   notifications: () => get<Notification[]>("/notifications/public"),
+  appAnnouncements: () => get<AppAnnouncement[]>("/app-announcements/active"),
   occasion: () => get<{ id: string; title: string; message?: string; imageUrl?: string } | null>("/occasion-popups/current"),
   enquire: (values: EnquiryInput) => post<unknown>("/enquiries", values),
   contact: (values: { name: string; email: string; phone?: string; message: string }) => post<unknown>("/contact", values),
