@@ -59,7 +59,12 @@ export function MobileHeader() {
     });
     return () => cancelAnimationFrame(frame);
   }, [menuVisible, pendingRoute]);
-  const drawerTranslateX = drawerProgress.interpolate({ inputRange: [0, 1], outputRange: [-420, 0] });
+  // Keep the drawer in normal left-to-right layout flow: the panel is the
+  // first child and the backdrop fills only the remaining space on its right.
+  // Using the measured panel width also guarantees the closed panel is wholly
+  // off the left edge on small and large Android screens alike.
+  const drawerWidth = Math.min(370, Math.round(width * 0.84));
+  const drawerTranslateX = drawerProgress.interpolate({ inputRange: [0, 1], outputRange: [-drawerWidth, 0] });
   const headerBrandWidth = Math.min(210, Math.max(142, width * 0.48));
   const headerBrandImage = theme.dark ? darkHeaderBrandImage : lightHeaderBrandImage;
   const isProfile = pathname === "/profile";
@@ -77,7 +82,7 @@ export function MobileHeader() {
     </View>
     <Modal visible={menuVisible} transparent animationType="none" onRequestClose={() => closeDrawer()} statusBarTranslucent>
       <View style={styles.modalRoot}>
-        <Animated.View style={[styles.drawerShell, { transform: [{ translateX: drawerTranslateX }] }]}>
+        <Animated.View style={[styles.drawerShell, { width: drawerWidth, transform: [{ translateX: drawerTranslateX }] }]}>
           <SafeAreaView edges={["top", "bottom"]} style={[styles.drawer, { backgroundColor: theme.colors.surface }]}>
             <View style={styles.drawerHeading}>
               <View style={styles.drawerHeadingCopy}><Image source={drawerBrandImage} resizeMode="contain" style={styles.drawerBrandImage} accessibilityLabel="Starry Nights brand" /><Text numberOfLines={1} style={{ color: theme.colors.muted }}>Start exploring</Text></View>
@@ -125,8 +130,8 @@ const styles = StyleSheet.create({
   iconButton: { width: 42, height: 42, borderRadius: 21, alignItems: "center", justifyContent: "center" },
   headerIconButton: {},
   headerBalance: { width: 42, height: 42 },
-  modalRoot: { flex: 1, flexDirection: "row" },
-  drawerShell: { width: "84%", maxWidth: 370, height: "100%" },
+  modalRoot: { flex: 1, flexDirection: "row", alignItems: "stretch", justifyContent: "flex-start" },
+  drawerShell: { height: "100%", alignSelf: "stretch", flexShrink: 0 },
   backdrop: { flex: 1, backgroundColor: "rgba(0,0,0,.42)" },
   drawer: { flex: 1, paddingHorizontal: spacing.md },
   drawerHeading: { paddingTop: spacing.sm, paddingBottom: spacing.md, flexDirection: "row", justifyContent: "space-between", alignItems: "center", gap: spacing.sm },
