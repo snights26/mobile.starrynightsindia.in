@@ -20,7 +20,7 @@
         "android.permission.RECORD_AUDIO"
       ],
       "adaptiveIcon": {
-        "foregroundImage": "./assets/icon/starry-nights-icon.png",
+        "foregroundImage": "./assets/icon/starry-nights-icon-adaptive-inset.png",
         "backgroundColor": "#024B62"
       },
       "edgeToEdgeEnabled": true,
