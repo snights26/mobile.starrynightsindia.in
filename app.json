@@ -15,7 +15,7 @@
     },
     "android": {
       "package": "com.starrynightsindia.app",
-      "versionCode": 2,
+      "versionCode": 3,
       "blockedPermissions": [
         "android.permission.RECORD_AUDIO"
       ],
