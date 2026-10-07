@@ -1,4 +1,4 @@
-import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { ActivityIndicator, Alert, Linking, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { router, useFocusEffect } from "expo-router";
 import { useCallback } from "react";
@@ -13,6 +13,16 @@ import { radius, shadows, spacing, useAppTheme } from "@/src/theme/theme";
 export default function ProfileScreen() {
   const theme = useAppTheme();
   const { user, isAuthenticated, logout, bucketItems, bucketLoading, bucketError, reloadBucket } = useAuth();
+  const openAccountDeletion = () => {
+    Alert.alert(
+      "Delete Account",
+      "Continue in the secure Starry Nights account-deletion page. You will need to confirm before anything is deleted.",
+      [
+        { text: "Cancel", style: "cancel" },
+        { text: "Continue", style: "destructive", onPress: () => { void Linking.openURL("https://starrynightsindia.in/delete-account").catch(() => Alert.alert("Unable to open account deletion", "Please visit starrynightsindia.in/delete-account in your browser.")); } },
+      ],
+    );
+  };
   useFocusEffect(useCallback(() => { void reloadBucket(); }, [reloadBucket]));
   if (!isAuthenticated || !user) return <Screen scroll={false}><AuthGate title="Your Starry Nights account" message="Sign in with Google to manage your profile, saved journeys, trips and payments." /></Screen>;
   return <Screen>
@@ -20,6 +30,7 @@ export default function ProfileScreen() {
     <Section title="My BucketList" action={<Pressable onPress={() => router.push("/(tabs)/bucket" as never)} accessibilityRole="button"><Text style={{ color: theme.colors.accent, fontWeight: "800" }}>View all</Text></Pressable>}>
       {bucketLoading ? <View style={[styles.bucketState, { backgroundColor: theme.colors.card, borderColor: theme.colors.border }]}><ActivityIndicator color={theme.colors.accent} /><Text style={{ color: theme.colors.muted }}>Loading saved packages…</Text></View> : bucketError ? <ErrorView message={bucketError} retry={() => { void reloadBucket({ force: true }); }} /> : bucketItems.length ? <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.bucketRail}>{bucketItems.slice(0, 8).map((item) => <PackageCard key={item.packageCode || item.code} item={item} compact />)}</ScrollView> : <EmptyView title="No bucket packages yet" message="Tap the heart on a journey to save it here." />}
     </Section>
+    <Pressable accessibilityRole="button" onPress={openAccountDeletion} style={[styles.deleteAccount, { borderColor: theme.colors.accentStrong }]}><Ionicons name="trash-outline" size={20} color={theme.colors.accentStrong} /><Text style={{ color: theme.colors.accentStrong, fontWeight: "800" }}>Delete Account</Text></Pressable>
     <Pressable onPress={() => void logout()} style={[styles.logout, { borderColor: theme.colors.accent }]}><Ionicons name="log-out-outline" size={20} color={theme.colors.accent} /><Text style={{ color: theme.colors.accent, fontWeight: "800" }}>Sign out</Text></Pressable>
   </Screen>;
 }
@@ -30,5 +41,6 @@ const styles = StyleSheet.create({
   avatarText: { color: "#fff", fontWeight: "800", fontSize: 24 },
   profileCopy: { flex: 1, minWidth: 0 }, name: { fontSize: 20, fontWeight: "800" }, email: { marginTop: 2 }, complete: { marginTop: spacing.xs, fontWeight: "700" },
   bucketRail: { gap: spacing.sm, paddingRight: spacing.md }, bucketState: { minHeight: 92, borderWidth: 1, borderRadius: radius.md, alignItems: "center", justifyContent: "center", gap: spacing.xs },
+  deleteAccount: { minHeight: 52, borderWidth: 1, borderRadius: radius.pill, flexDirection: "row", justifyContent: "center", alignItems: "center", gap: spacing.xs },
   logout: { minHeight: 52, borderWidth: 1, borderRadius: radius.pill, flexDirection: "row", justifyContent: "center", alignItems: "center", gap: spacing.xs },
 });
